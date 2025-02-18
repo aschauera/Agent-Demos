@@ -1,0 +1,14 @@
+$ressourceGroup="EchoBotSample"
+$webAppName="EchoBotAppService-aa"
+ 
+dotnet build -c release .\VoiceAgent.csproj
+if(Test-Path .deployment){
+     Remove-Item -Force .deployment
+}
+if(Test-Path VoiceAgent.zip){
+     Remove-Item -Force VoiceAgent.zip
+}
+az bot prepare-deploy --lang CSharp --code-dir . --proj-file-path .\VoiceAgent.csproj
+Compress-Archive * .\VoiceAgent.zip -force
+
+az webapp deployment source config-zip --resource-group $ressourceGroup --name $webAppName --src .\VoiceAgent.zip

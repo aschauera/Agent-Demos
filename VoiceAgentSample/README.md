@@ -1,10 +1,6 @@
 ﻿# Copilot Studio - Direct Line Speech Sample
 
 Welcome to the Copilot Studio Direct Line speech sample. This sample demonstrates how to publish a Copilot Studio agent over DirectLine Speech to use enable bi-directional voice interactions.
-The sample uses Azure Bot Service as a Relay between the DirectLine speech channel and the published Copilot Studio agent.
-The [Azure Bot Service](https://docs.microsoft.com/en-us/azure/bot-service/) implementations uses Azure Speech services for Text-To-Speech and Speech-to-text over the DirectLine.
-The goal of this sample is to have a Speech Enabled Copilot Studio bot published on a DirectLine Speech Channel using all the latest available features in Copilot Studio like Generative Orchestration.
-
 
 ## Table of Contents
 
@@ -18,15 +14,15 @@ The goal of this sample is to have a Speech Enabled Copilot Studio bot published
 
 ## Introduction
 
-This project showcases various demos of autonomous agents that can navigate and inspect plant environments. These agents are designed to help with tasks such as monitoring plant health, detecting anomalies, and collecting data.
+The sample uses Azure Bot Service as a Relay between the DirectLine speech channel and the published Copilot Studio agent.
+The [Azure Bot Service](https://docs.microsoft.com/en-us/azure/bot-service/) implementations uses Azure Speech services for Text-To-Speech and Speech-to-text over the DirectLine.
+The goal of this sample is to have a Speech Enabled Copilot Studio bot published on a DirectLine Speech Channel using all the latest available features in Copilot Studio like Generative Orchestration.
+
 
 ## Features
 
-- Autonomous intake of complex plant observation reports
-- Extraction of key findings and performance information
-- Grounding with Dataverse based product database
-- Image and graph extraction and explanation
-- Knowledge cross-referencing over multiple reports
+- Use voice to interact with any Copilot Studio agent
+- Leverages Azure Speech for multilingual TTS and STT
 
 ## Installation
 
@@ -58,7 +54,7 @@ This bot has been created based on [Azure Bot Service](https://dev.botframework.
 ### Setup required resources in Microsoft Azure
 
 The following sets up Azure Cognitive Services for speech as well as an App Service plan, a web app and an Azure Bot. Found in
-[AZ CLI deployment scrapbook](CopilotSpeechBot_ResourceDeployment.azcli)
+[AZ CLI deployment scrapbook](/VoiceAgentSample/DeploymentScripts/VoiceAgent_CreateResources.azcli)
 
 - Deploy Azure resources
 
@@ -90,10 +86,10 @@ The following sets up Azure Cognitive Services for speech as well as an App Serv
 
     #Enable web sockets on the app
     az webapp config set -g $ressourceGroup -n $webAppName --web-sockets-enabled true
-    #Create entry app registration and bot
-    $appId = $(az ad app create --display-name $appRegistrationName --query "appId")
-    ## Create the Azure BotFX bot
-    az bot create -g $ressourceGroup -n $botName --app-type SingleTenant --appid $appId --tenant-id $tenantId
+    #Create multi tenant app registration
+    $appId = $(az ad app create --display-name $appRegistrationName --query "appId" --sign-in-audience AzureADMultipleOrgs)
+    ## Create the Azure Bot service bot
+    az bot create -g $ressourceGroup -n $botName --app-type MultiTenant --appid $appId --tenant-id $tenantId
     #Set bot endpoint to web app path
     az bot update -g $ressourceGroup -n $botName --endpoint $webAppEndoint
     ```
@@ -109,7 +105,7 @@ The following sets up Azure Cognitive Services for speech as well as an App Serv
 
     ```bash
     #Clone Echo bot sample
-    git clone https://github.com/aschauera/SpeechRelayBot.git
+    git clone https://github.com/aschauera/Agent-Demos.git
     ```
 
 - In a terminal, navigate to `VoiceAgentSample/`

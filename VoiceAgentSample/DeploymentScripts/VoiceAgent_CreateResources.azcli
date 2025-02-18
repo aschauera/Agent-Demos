@@ -1,0 +1,30 @@
+# Assign values to variables
+$ressourceGroup="VoiceAgentSample"
+$location="westeurope"
+$appServiceName="VoiceAgentSampleAppPlan"
+$webAppName="VoiceAgentSampleWebApp"
+$cognitiveServiceAccountName="VoiceAgentSampleAIService"
+$botName="VoiceAgentBot"
+$appRegistrationName="VoiceAgentSamplePrincipal"
+$tenantId="<tenantID>"
+$webAppEndoint=echo https://$webAppName.azurewebsites.net/api/messages
+##Make sure to use the right subscription
+$subscriptionId=<ID from az account set output>
+##Connect to Azure subscroption
+az login
+az account set --subscription $subscriptionId
+##Create speech services
+az group create --location westeurope --name $ressourceGroup
+az cognitiveservices account create -n $cognitiveServiceAccountName -g $ressourceGroup --kind SpeechServices --sku F0 -l $location --yes
+$cognitiveServicesKey=$(az cognitiveservices account keys list -n $cognitiveServiceAccountName -g $ressourceGroup --query "key1")
+##Create app plan and web app
+az appservice plan create -g $ressourceGroup -n $appServiceName --sku F1 --location $location
+az webapp create -g $ressourceGroup -n $webAppName -p $appServiceName
+#Enable web sockets on the app
+az webapp config set -g $ressourceGroup -n $webAppName --web-sockets-enabled true
+#Create multi tenant app registration
+$appId = $(az ad app create --display-name $appRegistrationName --query "appId" --sign-in-audience AzureADMultipleOrgs)
+## Create the Azure Bot service bot
+az bot create -g $ressourceGroup -n $botName --app-type MultiTenant --appid $appId --tenant-id $tenantId
+#Set bot endpoint to web app path
+az bot update -g $ressourceGroup -n $botName --endpoint $webAppEndoint

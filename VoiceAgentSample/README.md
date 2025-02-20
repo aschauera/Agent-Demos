@@ -140,10 +140,12 @@ The following sets up Azure Cognitive Services for speech as well as an App Serv
       "BotName": "<Name of your CPS bot>",
       "BotId": "<Bot ID copied from CLI output>",
       "TenantId": "<Tenant copied from CLI output>",
-      "TokenEndPoint": "<Token endpoint copied from channel panel>"
+      "TokenEndPoint": "<Token endpoint copied from channel panel>",
+      "DirectLineBaseUri": "https://[<region>.]directline.botframework.com | "
     }
    ``` 
-   The complete `appsettings.json` file in your root directory should resemble the following: 
+   Refer to [DirectLine SDK Base URL](https://learn.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-direct-line-3-0-api-reference?view=azure-bot-service-4.0#base-uri) on instructions for the correct value of **DirectLineBaseUri**.
+   The complete `appsettings.json` file in your root directory should resemble the following:
    
    ```bash
     {
@@ -155,7 +157,8 @@ The following sets up Azure Cognitive Services for speech as well as an App Serv
         "BotName": "<name>",
         "BotId": "xxx",
         "TenantId": "yyy",
-        "TokenEndPoint": "zzz"
+        "TokenEndPoint": "zzz",
+        "DirectLineBaseUri": "https://[<region>.]directline.botframework.com"
       },
       "ConversationPool": {
         "TokenRefreshCheckIntervalInMinute": 10,

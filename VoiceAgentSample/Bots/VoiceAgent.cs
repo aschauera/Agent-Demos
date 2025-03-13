@@ -49,7 +49,7 @@ namespace VoiceAgentSample
                     await client.Conversations.PostActivityAsync(newConversation.ConversationtId, new DirectLine.Activity()
                     {
                         Type = ActivityTypes.Event,
-                        Name = "StartConversation",
+                        Name = "StartTheConversation",
                         From = new ChannelAccount { Id = turnContext.Activity.Recipient.Id, Name = turnContext.Activity.Recipient.Name },
                         ChannelId = turnContext.Activity.ChannelId,
                         Conversation = new ConversationAccount { Id = turnContext.Activity.Conversation.Id },
@@ -161,7 +161,7 @@ namespace VoiceAgentSample
                       x.Type == DirectLine.ActivityTypes.Message &&
                         string.Equals(x.From.Name, _botService.GetBotName(), StringComparison.Ordinal)).ToList();
 
-                //await turnContext.TraceActivityAsync("SPEECHAGENT:", label: "Copilot agent responding", valueType: "Text", value: turnContext.Activity.TopicName);
+                await turnContext.TraceActivityAsync("SPEECHAGENT:", label: "Copilot agent starting conversation", valueType: "Text", value: turnContext.Activity.TopicName);
                 if (botResponses?.Count() > 0)
                 {
                     if (int.Parse(response?.Watermark ?? "0") <= int.Parse(currentConversation.WaterMark ?? "0"))

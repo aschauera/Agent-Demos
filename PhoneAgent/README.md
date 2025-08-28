@@ -1,13 +1,7 @@
----
-page_type: sample
-languages:
-- csharp
-products:
-- azure-cognitive-services
-- azure-communication-services
----
 
 # ACS Call Automation and Microsoft Copilot Studio (MCS) Bot Integration - Extended sample code
+
+Original sample can be found here: https://github.com/Azure-Samples/communication-services-dotnet-quickstarts/tree/main/CallAutomation_MCS_Sample
 
 This is a sample application that demonstrates the integration of **Azure Communication Services (ACS)** with **Microsoft Copilot Studio (MCS)** bot using the **Direct Line API**. It enables real-time transcription of calls and interaction with a MCS bot, with responses played back to the caller using SSML (Speech Synthesis Markup Language). This sample has been extended to fix bugs and missing code from the original repo and extended to fully support **Microsoft Copilot Studio** agent functionality.
 Especially the missing transcription has been added as well as tweaks to speech recognition and multilinguael transcription and voice setup.

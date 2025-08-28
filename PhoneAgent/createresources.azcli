@@ -1,0 +1,26 @@
+# Resource group
+$resourceGroup = "ai-services-resource-group"
+
+az group create --name $resourceGroup --location westus2
+
+# ACS
+az communication create --name "<acsResourceName>" --location "Global" --data-location "United States" --resource-group $resourceGroup
+
+# AI Foundry Service
+az cognitiveservices account create --name foundry-multi-service-resource --resource-group $resourceGroup --kind AIServices --sku S0 --location westus2 --yes
+
+#Add cognitive services to ACS
+az communication call-automation add-cognitive-service --resource-group $resourceGroup --communication-resource-name "<acsResourceName>" --cognitive-services-account-name "<foundry-multi-service-resource>"
+
+#Local debugging
+#Dev Tunnel und local hosting
+devtunnel create --allow-anonymous
+devtunnel port create --port 49412
+# Run locally on devtunnel port
+dotnet run --urls "http://localhost:49412" 
+
+# Test websocket connection
+wscat -c "ws://localhost:49412/ws"
+
+# Get available multi lingual voices from Azure Cognitive Services
+spx synthesize --voices | Select-String -Pattern "Multi"

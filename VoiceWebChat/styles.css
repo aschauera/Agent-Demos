@@ -1,0 +1,31 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+}
+
+#webchat {
+  height: 85%;
+  width: 99%;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+#localeSelection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+#cardSelection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  visibility: hidden;
+}

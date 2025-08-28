@@ -3,37 +3,12 @@
   <head>
     <title>Web Chat: Cognitive Services Speech Services using JavaScript</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Cognitive Services Speech Services adapter is only available in full bundle -->
-    <!--
-      This CDN points to the latest official release of Web Chat. If you need to test against Web Chat's latest bits, please refer to using Web Chat's latest bits:
-      https://github.com/microsoft/BotFramework-WebChat#how-to-test-with-web-chats-latest-bits
-    -->
     <script
       crossorigin="anonymous"
       src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"
     ></script>
-    <style>
-      html,
-      body {
-        height: 100%;
-      }
-
-      body {
-        margin: 0;
-        font-family: "Segoe UI", sans-serif;
-      }
-
-      #webchat {
-        height: 95%;
-        width: 100%;
-      }
-      #localeSelection {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 10px;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Inline styles removed and moved to styles.css -->
   </head>
   <body>
     <div id="localeSelection" role="banner">
@@ -44,6 +19,29 @@
         <option value="fr-FR">French</option>
       </select>
     </div>
+    <div id="cardSelection" role="banner">
+      <label for="cardSelectionButtons">Ihre Karten:</label>
+      <div>
+        <input
+          type="image"
+          style="height: 40px"
+          src="https://customcopilotsopenaiblob.blob.core.windows.net/img/DebitCard.png?sp=r&st=2025-03-27T15:28:07Z&se=2025-06-30T22:28:07Z&spr=https&sv=2024-11-04&sr=b&sig=t16FSz5fDB9eNOkQykGNZI4RbdoA%2BleU1SvcDmnWdiI%3D"
+          alt="Debit Card"
+          title="Credit card"
+          onclick="alert('Image clicked!')"
+        />
+      </div>
+      <div>
+        <input
+          type="image"
+          style="height: 40px; border: 2px solid red"
+          src="https://customcopilotsopenaiblob.blob.core.windows.net/img/DebitCardLogo.png?sp=r&st=2025-03-27T15:28:40Z&se=2025-07-22T22:28:40Z&spr=https&sv=2024-11-04&sr=b&sig=HnwT0n%2BpSkhLxb9gykf%2BOrSKOOOhxj91%2FzQUzLJGW%2BM%3D"
+          alt="Credit Card"
+          title="Debit card"
+          onclick="alert('Image clicked!')"
+        />
+      </div>
+    </div>
     <div id="webchat" role="main"></div>
     <script>
       // Creata a function to fetch the Direct Line secret from the secrets.json file
@@ -52,7 +50,7 @@
         const data = await response.json();
         let secret = data.directLineSecret;
         let speechRegion = data.speechRegion;
-        let speechKey = data.speechKey;  
+        let speechKey = data.speechKey;
         // //GET token using HTTP GET from Copilot Studio Token endpoint (insecure, for demo purposes only
         // const res = await fetch('https://a0738832200e49b6a81904c6ee67d5.4d.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr22e_cardServiceAgent/directline/token?api-version=2022-03-01-preview', {
         //   headers: {
@@ -83,8 +81,8 @@
               // This function will be called every time the token is being used.
               credentials: {
                 region: speechRegion,
-                subscriptionKey: speechKey
-              }
+                subscriptionKey: speechKey,
+              },
             }
           );
         // Create a store to listen for the direct line connection to be fulfilled, then triggers conversation start topic
@@ -94,7 +92,7 @@
             (next) =>
             (action) => {
               console.log("Action received:", action);
-
+              // HANDLE CONVERSATION START
               // Listen for the direct line connection to be fulfilled, then triggers conversation start topic
               if (action.type === "DIRECT_LINE/CONNECT_FULFILLED") {
                 console.log("Direct line connected successfully");
@@ -110,13 +108,29 @@
                   },
                 });
               }
+              // Listen for incoming activities that the webchat client needs to handle
+              if (action.type === "DIRECT_LINE/INCOMING_ACTIVITY") {
+                const { activity } = action.payload;
+                // Handle only incoming activities that are of type event and have a name of "showCardSelection"
+                if (activity.name === "showCardSelection") {
+                  console.log(
+                    "Card selection event received : ",
+                    activity.value
+                  );
+
+                  // Dispatch a new activity to the bot with the selected card value
+                  const event = new Event("webchatincomingactivity");
+                  event.data = activity;
+                  window.dispatchEvent(event);
+                }
+              }
 
               return next(action);
             }
         );
 
         // Set style options.
-        const styleOptions = { 
+        const styleOptions = {
           accent: "#0078D4",
           autoScrollSnapOnPage: true,
           autoScrollSnapOnPageOffset: 0,
@@ -210,8 +224,12 @@
             activity.locale = document.getElementById("locale").value;
             console.log("Activity Locale: ", activity.locale);
             var selectedVoice =
-              voices.find(
-                (voice) => activity.locale == "de-DE" ? voice.name === "Microsoft Server Speech Text to Speech Voice (en-US, AvaMultilingualNeural)" :  voice.name === "Microsoft Server Speech Text to Speech Voice (en-US, AvaMultilingualNeural)"
+              voices.find((voice) =>
+                activity.locale == "de-DE"
+                  ? voice.name ===
+                    "Microsoft Server Speech Text to Speech Voice (en-US, AvaMultilingualNeural)"
+                  : voice.name ===
+                    "Microsoft Server Speech Text to Speech Voice (en-US, AvaMultilingualNeural)"
               ) || voices[0];
             // console.log(
             //   "Available voices: ",
@@ -255,9 +273,16 @@
               },
             });
           });
+        //Register an event listener to handle incoming activities in the DOM
+        window.addEventListener("webchatincomingactivity", ({ data }) => {
+          // Show the card selection buttons
+          document.getElementById("cardSelection").style.visibility = "visible";
+          console.log(`Received an activity of type "${data.type}":`);
+          console.log(data);
+        });
 
         document.querySelector("#webchat > *").focus();
-      })().catch((err) => console.error(err));
+      })().catch((err) => console.error(err))
     </script>
   </body>
 </html>

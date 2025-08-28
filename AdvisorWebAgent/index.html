@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Information Form</title>
+    <!-- Reference webchat control -->
+    <script
+      crossorigin="anonymous"
+      src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"
+    ></script>
+    <!-- Reference styles-->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="form-container">
+      <div class="logo">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/d/d9/Raiffeisen_Bank_International_Logo.svg"
+        />
+      </div>
+      <h2>Customer Advisory Form</h2>
+      <form id="customerForm">
+        <div class="form-group">
+          <button type="button" id="scanId">1. Scan ID document</button>
+        </div>
+        <div class="form-group">
+          <label for="customerName">Customer Name:</label>
+          <input type="text" id="customerName" name="customerName"  />
+        </div>
+        <div class="form-group">
+          <label for="customerID">Customer ID:</label>
+          <input type="text" id="customerID" name="customerID"  />
+        </div>
+        <div class="form-group">
+          <label for="dob">Date of Birth:</label>
+          <input type="date" id="dob" name="dob"  />
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email"  />
+        </div>
+        <div class="form-group">
+          <button type="button" id="fetchCrmData">
+            2. Validate data from CRM
+          </button>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number:</label>
+          <input type="tel" id="phone" name="phone"  />
+        </div>
+        <div class="form-group">
+          <label for="address">Address:</label>
+          <input type="text" id="address" name="address"  />
+        </div>
+        <div class="form-group">
+          <label for="accountType">Account Type:</label>
+          <select id="accountType" name="accountType" >
+            <option value="pension">Pension Plan</option>
+            <option value="checking">Checking</option>
+            <option value="credit">Credit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="submit" id="submitData">3. Validate & Submit</button>
+        </div>
+        <!-- New button to reset all forms and global variables -->
+        <div class="form-group">
+          <button type="button" id="resetForm">Reset</button>
+        </div>
+        <!-- New error label to display error messages -->
+        <div class="form-group">
+          <span id="crmError" style="color: red"></span>
+        </div>
+      </form>
+    </div>
+    <!--<div id="webchat" role="main"></div>-->
+    <script>
+      // Global variable to track if ID scan is complete.
+      let _idScanComplete = false;
+      let _errorcodes = [];
+
+      // Handler for the scanId button.
+      document.getElementById("scanId").addEventListener("click", function () {
+        _idScanComplete = true;
+        console.log("ID scan completed:", _idScanComplete);
+        // Change the button's background color to green and update text.
+        this.style.backgroundColor = "green";
+        this.textContent = "ID scan completed";
+        document.getElementById("customerName").value = "Andreas Aschauer";
+        document.getElementById("customerID").value = "aaschauer@ms.com";
+        document.getElementById("dob").value = "1985-11-14";
+      });
+
+      // Function to fetch customer data from CRM based on email and either customerName or customerID.
+      async function fetchCustomerData() {
+        // Clear any previous error messages.
+        document.getElementById("crmError").textContent = "";
+
+        const email = document.getElementById("email").value.trim();
+        const customerName = document.getElementById("customerName").value.trim();
+        const customerID = document.getElementById("customerID").value.trim();
+
+        if (!email || (!customerName && !customerID)) {
+          document.getElementById("crmError").textContent =
+            "E0001: Please provide an Email and either Customer Name or Customer ID.";
+          _errorcodes.push("E0001");
+          return;
+        }
+
+        // Build query parameters.
+        const queryParams = new URLSearchParams();
+        queryParams.append("email", email);
+        if (customerName) queryParams.append("customerName", customerName);
+        if (customerID) queryParams.append("customerID", customerID);
+
+        try {
+          // Replace the URL with your actual CRM API endpoint.
+          const response = await fetch(
+            "https://your-crm-api-endpoint.com/customers?" +
+              queryParams.toString()
+          );
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          const data = await response.json();
+          console.log("Customer data:", data);
+          alert(
+            "Fetched customer data successfully. Check console for details."
+          );
+        } catch (error) {
+          console.error("Error fetching customer data:", error);
+          document.getElementById("crmError").textContent = error.message;
+        }
+      }
+
+      async function submitData(errorCodes = []) {
+        await fetch(
+          "https://prod-74.westeurope.logic.azure.com:443/workflows/80f02c730f44433fb0c291c2086c47c2/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Msp0XlzkCwgYuTQxwrE-2EqIum2VX9Paj7mpn2g5YMg",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              processId: 1,
+              customerId:
+                parseInt(document.getElementById("customerID").value, 10) || 0,
+              customerName: document.getElementById("customerName").value,
+              errorCode: errorCodes.join(","),
+            }),
+          }
+        );
+      }
+
+      // Register click event for the fetchCrmData button.
+      document
+        .getElementById("fetchCrmData")
+        .addEventListener("click", fetchCustomerData);
+
+      // Handler for the submitData button.
+      document
+        .getElementById("submitData")
+        .addEventListener("click", function (event) {
+          _errorcodes = [];
+          // If the ID scan is not complete, show error message "E0002" and prevent form submission.
+          if (!_idScanComplete) {
+            // Append error message
+            document.getElementById("crmError").textContent += "\nE0002: ID scan incomplete";
+            _errorcodes.push("E0002");
+            event.preventDefault();
+          }
+          submitData(_errorcodes);
+        });
+
+      // Handler for the resetForm button.
+      document
+        .getElementById("resetForm")
+        .addEventListener("click", function () {
+          // Reset the form fields
+          document.getElementById("customerForm").reset();
+          // Reset global variables
+          _idScanComplete = false;
+          _errorcodes = [];
+          // Clear error message
+          document.getElementById("crmError").textContent = "";
+          // Reset the scanId button appearance
+          const scanBtn = document.getElementById("scanId");
+          scanBtn.style.backgroundColor = "";
+          scanBtn.textContent = "1. Scan ID document";
+        });
+    </script>
+  </body>
+</html>

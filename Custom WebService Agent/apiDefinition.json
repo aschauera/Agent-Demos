@@ -1,0 +1,508 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Contract Fields API",
+    "description": "API to retrieve contract draft fields and field options.",
+    "version": "1.0.0"
+  },
+  "host": "aschi-custom-contract-api.redmeadow-373e98f8.westus.azurecontainerapps.io",
+  "basePath": "/b2bapi/v2",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "api_key": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "x-api-key"
+    }
+  },
+  "security": [
+    {
+      "api_key": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Fields",
+      "description": "Operations related to contract fields"
+    }
+  ],
+  "paths": {
+    "/contract-draft-request/metadata": {
+      "get": {
+        "tags": [
+          "Fields"
+        ],
+        "operationId": "GetFieldMetadata",
+        "x-ms-summary": "Get fields",
+        "description": "Returns a collection of metadata valid for contracts. Fields which require a closed list value return their URL to retriveve the values in the URL field",
+        "parameters": [
+          {
+            "name": "entityName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Target entity name (e.g., \u0022contractDraftRequest\u0022)."
+          },
+          {
+            "name": "apiName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Filter results by a specific field apiName."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "type": "integer",
+            "format": "int32",
+            "required": false,
+            "default": 0,
+            "description": "Zero-based offset for pagination."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "format": "int32",
+            "required": false,
+            "default": 10,
+            "description": "Maximum number of items to return."
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "format": "",
+            "required": false,
+            "description": "Filter expression",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with field list.",
+            "schema": {
+              "$ref": "#/definitions/FieldsResponse"
+            },
+            "examples": {
+              "application/json": {
+                "fields": [
+                  {
+                    "apiName": "gdpr2contractDraftRequest",
+                    "label": "GDPR 28 Data Processor / Data Controller",
+                    "type": "TEXT",
+                    "description": "To render string or Data Processor or as Data Controller?",
+                    "apiUrl": "b2bapi/v2/fields/options?entityName=contractDraftRequest\u0026apiName=gdprDataProcessorDataController\u0026offset=0\u0026limit=10",
+                    "value": "Data Processor",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": false,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "termType",
+                    "label": "Term Type",
+                    "type": "TEXT",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "Fixed Term \u2013 36 Months",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": true,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "effectiveDate",
+                    "label": "Effective Date",
+                    "type": "DATE",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "01 January 2026",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": true,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "outsourcing",
+                    "label": "Outsourcing",
+                    "type": "BOOLEAN",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "Yes",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": false,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "totalContractValue",
+                    "label": "Total Contract Value (TCV)",
+                    "type": "CURRENCY",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "\u20AC2,500,000",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": true,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "penaltiesAgreed",
+                    "label": "Penalties Agreed",
+                    "type": "BOOLEAN",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "Yes",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": false,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "penaltyRulesLocation",
+                    "label": "Penalty Rules \u2013 Where To Find In Contract?",
+                    "type": "TEXT",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "Section 12.3 \u2013 Service Level Breach",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": false,
+                    "sortable": false,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "cloud",
+                    "label": "Cloud",
+                    "type": "TEXT",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "Public Cloud \u2013 Multi-Region Deployment",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": false,
+                    "parentFields": [],
+                    "childFields": []
+                  },
+                  {
+                    "apiName": "gdpr",
+                    "label": "GDPR",
+                    "type": "BOOLEAN",
+                    "description": null,
+                    "apiUrl": null,
+                    "value": "Yes",
+                    "creatable": true,
+                    "updatable": true,
+                    "searchable": true,
+                    "filterable": true,
+                    "sortable": false,
+                    "parentFields": [],
+                    "childFields": []
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "summary": "Get contract field definitions",
+        "x-ms-visibility": "important"
+      },
+      "post": {
+        "responses": {
+          "default": {
+            "description": "default",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "apiName": {
+                        "type": "string",
+                        "description": "apiName"
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "label"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "type"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "description"
+                      },
+                      "apiUrl": {
+                        "type": "string",
+                        "description": "apiUrl"
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "value"
+                      },
+                      "creatable": {
+                        "type": "boolean",
+                        "description": "creatable"
+                      },
+                      "updatable": {
+                        "type": "boolean",
+                        "description": "updatable"
+                      },
+                      "searchable": {
+                        "type": "boolean",
+                        "description": "searchable"
+                      },
+                      "filterable": {
+                        "type": "boolean",
+                        "description": "filterable"
+                      },
+                      "sortable": {
+                        "type": "boolean",
+                        "description": "sortable"
+                      },
+                      "parentFields": {
+                        "type": "array",
+                        "items": {},
+                        "description": "parentFields"
+                      },
+                      "childFields": {
+                        "type": "array",
+                        "items": {},
+                        "description": "childFields"
+                      }
+                    }
+                  },
+                  "description": "fields"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Save contract metadata",
+        "description": "Saves the contract metadata in the system",
+        "operationId": "PostFieldMetadata",
+        "parameters": [
+          {
+            "name": "accept",
+            "in": "header",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "apiName": {
+                        "type": "string",
+                        "description": "apiName"
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "value"
+                      }
+                    }
+                  },
+                  "description": "fields"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/fields/options": {
+      "get": {
+        "tags": [
+          "Fields"
+        ],
+        "operationId": "GetFieldOptions",
+        "x-ms-summary": "Get field options",
+        "description": "Returns field options for a given entity and field apiName.\n",
+        "parameters": [
+          {
+            "name": "entityName",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "Target entity name (e.g., \u0022contractDraftRequest\u0022)."
+          },
+          {
+            "name": "apiName",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "Field apiName to retrieve options for."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "type": "integer",
+            "format": "int32",
+            "required": false,
+            "default": 0
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "format": "int32",
+            "required": false,
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with field list (options payload shape aligned with main response).",
+            "schema": {
+              "$ref": "#/definitions/FieldsResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "summary": "Get field option values"
+      }
+    }
+  },
+  "definitions": {
+    "FieldsResponse": {
+      "type": "object",
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Field"
+          }
+        }
+      }
+    },
+    "Field": {
+      "type": "object",
+      "required": [
+        "apiName",
+        "label"
+      ],
+      "properties": {
+        "apiName": {
+          "type": "string",
+          "description": "Unique API name of the field."
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label of the field."
+        },
+        "type": {
+          "type": "string",
+          "description": "Data type of the field.",
+          "enum": [
+            "TEXT",
+            "DATE",
+            "BOOLEAN",
+            "CURRENCY"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Field description (nullable in practice)."
+        },
+        "apiUrl": {
+          "type": "string",
+          "description": "Relative URL to fetch field options for this field."
+        },
+        "value": {
+          "type": "string",
+          "description": "Current or default value as text."
+        },
+        "creatable": {
+          "type": "boolean"
+        },
+        "updatable": {
+          "type": "boolean"
+        },
+        "searchable": {
+          "type": "boolean"
+        },
+        "filterable": {
+          "type": "boolean"
+        },
+        "sortable": {
+          "type": "boolean"
+        },
+        "parentFields": {
+          "type": "array",
+          "description": "Optional list of parent field apiNames.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "childFields": {
+          "type": "array",
+          "description": "Optional list of child field apiNames.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

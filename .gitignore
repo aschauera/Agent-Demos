@@ -301,3 +301,4 @@ rush.json
 /experimental/common/scripts
 /experimental/generation/generator/.rush
 orchestrator.json
+demowebservices/MockContractWebService/api-tests.http

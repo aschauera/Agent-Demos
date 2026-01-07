@@ -1,5 +1,4 @@
 using Azure.Communication.CallAutomation;
-using Azure.Communication;
 using Azure.Messaging;
 using Azure.Messaging.EventGrid;
 using Azure.Messaging.EventGrid.SystemEvents;
@@ -14,7 +13,6 @@ using System.Net.Http.Headers;
 using CallAutomation_MCS_Sample;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,29 +20,30 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 
 //Get ACS Connection String from appsettings.json
 var acsConnectionString = builder.Configuration.GetValue<string>("AcsConnectionString");
-ArgumentNullException.ThrowIfNullOrEmpty(acsConnectionString);
+ArgumentException.ThrowIfNullOrEmpty(acsConnectionString);
 
 //Call Automation Client
 var client = new CallAutomationClient(connectionString: acsConnectionString);
 
 //Get the Cognitive Services endpoint from appsettings.json
 var cognitiveServicesEndpoint = builder.Configuration.GetValue<string>("CognitiveServiceEndpoint");
-ArgumentNullException.ThrowIfNullOrEmpty(cognitiveServicesEndpoint);
+ArgumentException.ThrowIfNullOrEmpty(cognitiveServicesEndpoint);
 
 //Get Agent Phone number from appsettings.json
 var agentPhonenumber = builder.Configuration.GetValue<string>("AgentPhoneNumber");
-ArgumentNullException.ThrowIfNullOrEmpty(agentPhonenumber);
+ArgumentException.ThrowIfNullOrEmpty(agentPhonenumber);
 
 // Get Direct Line Secret from appsettings.json
 var directLineSecret = builder.Configuration.GetValue<string>("DirectLineSecret");
-ArgumentNullException.ThrowIfNullOrEmpty(directLineSecret);
+ArgumentException.ThrowIfNullOrEmpty(directLineSecret);
 // Get voice name from appsettings.json
 var voiceName = builder.Configuration.GetValue<string>("VoiceName") ?? "en-US-AvaMultilingualNeural";
-ArgumentNullException.ThrowIfNullOrEmpty(voiceName);
+ArgumentException.ThrowIfNullOrEmpty(voiceName);
 
 //Get language  from appsettings.json
 var ssmlLanguage = builder.Configuration.GetValue<string>("VoiceLanguage") ?? "en-US";

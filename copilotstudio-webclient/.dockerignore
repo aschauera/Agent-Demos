@@ -1,0 +1,12 @@
+# Docker ignore file for Copilot Studio Web Client
+.git
+.gitignore
+.env
+.vscode
+node_modules
+*.md
+README.md
+deploy-containerapp.ps1
+swa-cli.config.json
+staticwebapp.config.json
+.dockerignore

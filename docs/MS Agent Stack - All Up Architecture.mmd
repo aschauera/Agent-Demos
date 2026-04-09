@@ -1,0 +1,73 @@
+---
+config:
+  layout: elk
+  look: neo
+  themeVariables:
+    primaryColor: '#1b365d'
+    secondaryColor: '#2176ff'
+    tertiaryColor: '#dfe9f3'
+    primaryBorderColor: '#2176ff'
+    lineColor: '#6faaff'
+    edgeLabelBackground: '#1c1e21'
+---
+flowchart TB
+ subgraph UI["`🎨 **UI Layer**`"]
+        M365["🧠 M365 Copilot"]
+        AL["🤖 Agent Mode"]
+        AB["🧩 Agent Builder"]
+  end
+ subgraph ORCH["🕹️ Orchestration Layer"]
+        CS["📢 Copilot Studio Orchestrator Agent (Team Lead)"]
+        SA["🧭 Copilot Studio - Specialist Agent (Team Member)"]
+  end
+
+ subgraph SYS["⚙️ Integration layer"]
+        FT["🏗️ Azure Foundry SDKs"]
+        AIS["🔍 AI Search"]
+        AZS["Azure Services"]
+        TOOL["🛠️ Tool"]
+        API["🔗 API Interface"]
+        MCP["📡 MCP"]
+        CWS["🧰 CUA"]
+        A2A["🔄 A2A"]
+        JOULE["💡 Joule"]
+        AF["🧑‍✈️ Agentforce"]
+        EXT["🌐 Other Agent FX"]
+  end
+
+ subgraph BIZ["Microsoft Business Agents (Dynamics)"]
+      
+        SALES["💰 Sales agent"]
+        SERVICE["🛎️ Service agent"]
+        MARK["📣 Marketing agent"]
+
+  end
+ subgraph KNO["Knowledge Layer"]
+        WIQ["🧠 WorkIQ"]
+        AIS2["🔎 AI Search"]
+        KNOC["🏥 LOB Knowledge Connectors"]
+  end
+ subgraph A365["💼 Agent 365"]
+        ORCH
+        SYS
+        UI
+        BIZ
+        KNO
+  end 
+
+
+    M365 -- Edit office files --> AL
+    M365 -- Simple retrieval agents --> AB
+    UI -- Extended by --> ORCH & BIZ
+    BIZ -- Extended by --> ORCH
+    SA -- "1..n" --> FT & A2A
+    CS -- "1..n" --> SA
+    FT -- Indexed knowledge --> AIS
+    TOOL -- API call --> API
+    TOOL -- Data stream --> MCP
+    TOOL -- Integration --> CWS
+    A2A -- "1..n" --> JOULE & AF & EXT
+    FT -- Exposing --> AZS
+    SA -- "Uses 1..n" --> TOOL
+    ORCH --> KNO
+ 

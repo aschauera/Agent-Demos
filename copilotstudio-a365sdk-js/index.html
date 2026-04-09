@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Agents Copilot Studio Client integration with Web Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="index.css">
+   <script src="https://unpkg.com/botframework-webchat@4.18.0/dist/webchat.js"></script>
+   <script src="https://unpkg.com/@azure/msal-browser@4.13.1/lib/msal-browser.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "@microsoft/agents-copilotstudio-client": "https://unpkg.com/@microsoft/agents-copilotstudio-client@1.1.0-alpha.58/dist/src/browser.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- Main Site Content -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <h1>Raiffeisen Bank - Schwaz Wattens</h1>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#">Privatkunden</a></li>
+          <li><a href="#">Firmenkunden</a></li>
+          <li><a href="#">Mein ELBA</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <img src="../copilotstudio-webclient-directline/img/hero-image.jpg" alt="Underwater luxury house" class="hero-image" />
+      <div class="hero-content">
+        <h2>Willkommen Daheim!</h2>
+        <p>Egal, WIE und WO Sie Ihr Zuhause gestalten möchten, alles beginnt mit einem Gespräch.</p>
+        <button class="btn-primary">Hier weitere Informationen</button>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Aktuelles</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Click to pay</h3>
+          <p>Click to Pay ist Ihre smarte Zahlungsmethode für Online-Einkäufe. Mit Click to Pay registrieren Sie sich einmal über die Mein ELBA-App.</p>
+          <a href="#" class="card-link">Weitere Informationen →</a>
+        </div>
+        <div class="card">
+          <h3>Online Sparen</h3>
+          <p>Sie wollen einfach und flexibel sparen und Ihr Sparguthaben komfortabel online verwalten? Dann starten Sie jetzt mit Online Sparen.</p>
+          <a href="#" class="card-link">Mehr Informationen →</a>
+        </div>
+        <div class="card">
+          <h3>Konsumkredit</h3>
+          <p>Der Konsumkredit von der Raiffeisen Schwaz Wattens unterstützt Sie bei der Finanzierung neuer Anschaffungen wie Möbel, Elektrogeräte oder eines neuen Autos.</p>
+          <a href="#" class="card-link">Mehr Informationen →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Entscheiden Sie sich für ein modernes Konto</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Girokonto (Gehaltskonto)</h3>
+          <p>Egal, ob Sie Berufseinsteiger oder -aufsteiger sind, das Raiffeisen Girokonto ist ein sicheres und zuverlässiges Konto mit modernen Banking Funktionen.</p>
+          <a href="#" class="card-link">Weitere Informationen →</a>
+        </div>
+        <div class="card">
+          <h3>Online Ratgeber</h3>
+          <p>Lassen Sie sich von unserem Online Ratgeber inspirieren und holen Sie sich aktuelle Informationen rund um das Thema Nachhaltigkeit, Förderung und Finanzierung beim Bauen & Sanieren.</p>
+          <a href="#" class="card-link">Zum Online Ratgeber →</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <p>&copy; 2026 Raiffeisen. Alle Rechte vorbehalten.</p>
+      <nav>
+        <a href="#">Impressum</a> |
+        <a href="#">Datenschutz</a> |
+        <a href="#">AGB & Rechtliches</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- Chat Widget -->
+  <div id="chat-container">
+    <button id="chat-toggle" aria-label="Chat öffnen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div id="webchat" role="complementary"></div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>

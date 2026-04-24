@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>s Wohnfinanz – Wohnglück sicher finanzieren</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/botframework-webchat@4.18.0/dist/webchat.js"></script>
+  <script src="https://unpkg.com/@azure/msal-browser@4.13.1/lib/msal-browser.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "@microsoft/agents-copilotstudio-client": "https://unpkg.com/@microsoft/agents-copilotstudio-client@1.1.0-alpha.58/dist/src/browser.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="header-top-row">
+        <a href="#" class="logo-link">
+          <img
+            src="https://cdn0.erstegroup.com/content/dam/at/swohnfinanz/common/AT-sWohnfinanz_Logo_screen_white.png"
+            alt="s Wohnfinanz"
+            class="logo-img"
+          />
+        </a>
+        <nav class="top-nav">
+          <a href="#">Kontakt</a>
+          <a href="#">Standorte</a>
+          <a href="#">Partner werden</a>
+        </nav>
+      </div>
+      <nav class="main-nav">
+        <ul>
+          <li><a href="#">Finanzieren</a></li>
+          <li><a href="#">Bausparen</a></li>
+          <li><a href="#">Versicherungspartner</a></li>
+          <li><a href="#">Kundenservice</a></li>
+          <li><a href="#">Immobilienkalkulator</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <img
+        src="https://cdn0.erstegroup.com/gemlip/v2/2P6cWrnJYR6FwoZZ248VyJBZ71vB/dam/at/sbau/www_sbausparkasse_at/gem-assets/1_header/2026_finanzieren/sBau-SWPF-2026-Hero-Desktop-3840x1145-Main-plain.jpg.1774215743.xywh.w3840w2560w1920w1280w1024w820w570_w1920.webp"
+        alt="Willkommen im Wohnglück"
+        class="hero-bg"
+      />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>Willkommen<br>im Wohnglück.</h1>
+        <ul class="hero-list">
+          <li>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 111.414-1.414L8.414 12.172l7.879-7.879a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Sicher finanzieren.
+          </li>
+          <li>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 111.414-1.414L8.414 12.172l7.879-7.879a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Flexibel zurückzahlen.
+          </li>
+          <li>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 111.414-1.414L8.414 12.172l7.879-7.879a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Bis zu 20 Jahre mit fixen Zinsen planen.
+          </li>
+        </ul>
+        <div class="hero-cta">
+          <a href="#" class="btn-white">Mehr erfahren</a>
+          <a href="#" class="btn-outline-hero">Finanzierungszusage sichern</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Darlehen -->
+    <section class="offer-section">
+      <h2 class="section-title">Unser aktuelles Darlehensangebot</h2>
+      <div class="offer-card offer-teal">
+        <div class="offer-image">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/3ohk9538e9ngqf7Cp23o5TmT6HTz/dam/at/sbau/www_sbausparkasse_at/gem-assets/1_header/2025_darlehen/sBau_HeroMobile_SWPF_2025_Side_1024x768px.jpg.1749140924.x173y104w847h658.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w570.webp"
+            alt="Wohnglück sicher finanzieren"
+          />
+        </div>
+        <div class="offer-body">
+          <h3>Wohnglück sicher finanzieren.<br>Mit bis zu 20 Jahren Fixzinsgarantie.</h3>
+          <p class="offer-subtitle">Ihre Vorteile:</p>
+          <ul class="offer-list">
+            <li>Laufzeit bis zu 35 Jahre</li>
+            <li>Fixe Zinsen für 18 Monate, 6, 15 oder 20 Jahre</li>
+            <li>Nur Zinsen zahlen dank Raten-Atempause<sup>4</sup></li>
+            <li>Mit Sicherheitspaket</li>
+          </ul>
+          <a href="#" class="btn-orange">Mehr Infos zum Bauspardarlehen</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bausparen -->
+    <section class="offer-section">
+      <h2 class="section-title">Unser aktuelles Bausparangebot</h2>
+      <div class="offer-card offer-purple">
+        <div class="offer-image">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/2GzMYduZp457maK5fS3YaT1FXEDw/dam/at/sbau/www_sbausparkasse_at/gem-assets/2_boxenbilder/2026_bausparen/sBau-SWPS-2025-2140x1179.jpg.1772206498.x300y68w1661h1057.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w570.webp"
+            alt="Das Fundament für Ihre Sparpläne"
+          />
+        </div>
+        <div class="offer-body">
+          <h3>Das Fundament für Ihre Sparpläne</h3>
+          <p class="offer-subtitle">Ihre Vorteile:</p>
+          <ul class="offer-list">
+            <li>5 % für die ersten 12 Monate<sup>1</sup></li>
+            <li>1,5 % staatliche Prämie in diesem Jahr</li>
+            <li>Danach fixe oder variable Zinsen</li>
+          </ul>
+          <a href="#" class="btn-orange">Mehr Infos zum Bausparen</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Karriere -->
+    <section class="karriere-section">
+      <h2 class="section-title">Starten Sie Ihre Karriere bei der s Wohnfinanz</h2>
+      <div class="karriere-card">
+        <div class="karriere-tagline">
+          <h3>Mein Job?</h3>
+          <h3 class="karriere-highlight">Wohnglücksbringer.</h3>
+          <h3>Und deiner?</h3>
+        </div>
+        <div class="karriere-info">
+          <h3>Alle Infos zu Ihrer Karriere bei der s Wohnfinanz finden Sie hier.</h3>
+          <p><strong>Werden Sie jetzt Teil unseres Wohnglücksbringer-Teams.</strong></p>
+          <a href="#" class="btn-outline-white">Zu den Infos</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Über uns -->
+    <section class="about-section">
+      <h2 class="section-title">s Wohnfinanz - wir über uns</h2>
+      <div class="about-grid">
+        <article class="about-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/KkKKsFRYPm3rff6AAGvTVhAoVhh/dam/at/sbau/www_sbausparkasse_at/gem-assets/1_header/2025-allgemein/Erste-Campus-Foto-Toni-Rappersberger-20160517_56.jpg.1751974942.xywh.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w360.webp"
+            alt="Über die s Wohnfinanz"
+          />
+          <div class="about-card-body">
+            <h3>Über die s Wohnfinanz</h3>
+            <p>Bei uns laufen Kompetenz, Know-How und Ressourcen aus erfahrenen Unternehmen zusammen.</p>
+            <a href="#" class="link-blue">Mehr Infos zum Unternehmen</a>
+          </div>
+        </article>
+        <article class="about-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/2XveR2BsbDWpVs7LAPgM4MfYapDE/dam/common/brand/images/private-banking/original-size/woman-standing-building-new-cd.jpg.6a195ae1d7334e26.xywh.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w360.webp"
+            alt="Unsere Mission & unsere Ziele"
+          />
+          <div class="about-card-body">
+            <h3>Unsere Mission &amp; unsere Ziele</h3>
+            <p>Die s Wohnfinanz steht für leistbare und maßgeschneiderte Wohnraumfinanzierungen.</p>
+            <a href="#" class="link-blue">Mehr dazu</a>
+          </div>
+        </article>
+        <article class="about-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/4PqEwMG5oRc19pmb4ByWfwt1PT2Y/dam/at/swohnfinanz/www_swohnfinanz_at/Mobile/sBau_Mobile_UnserAgebot.jpg.2425e26457814e87.xywh.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w360.webp"
+            alt="Unser Beratungsangebot"
+          />
+          <div class="about-card-body">
+            <h3>Unser Beratungsangebot</h3>
+            <p>Wir decken das gesamte Spektrum an Finanzdienstleistungen ab.</p>
+            <a href="#" class="link-blue">Zu unserem Angebot</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Das könnte Sie auch interessieren -->
+    <section class="interest-section">
+      <h2 class="section-title">Das könnte Sie auch interessieren:</h2>
+      <div class="interest-grid">
+        <article class="interest-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/3VenLYHQxTyVk6wMSekVyckedHTK/dam/at/sbau/www_sbausparkasse_at/gem-assets/1_header/2025_bausparen/sBau-SWPS-2025-2140x1179_ohne-Stoerer.jpg.1758109415.xywh.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w360.webp"
+            alt="Bausparen"
+          />
+          <div class="interest-card-body">
+            <h3>Bausparen</h3>
+            <p>Mit dem Bausparen der s Bausparkasse sparen Sie sicher und ertragreich für die Zukunft.</p>
+            <a href="#" class="link-blue">Zum Bausparen</a>
+          </div>
+        </article>
+        <article class="interest-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/3wzR6FkQ7KbVwbe2cQFY41y1J9Hd/dam/at/sbau/www_sbausparkasse_at/gem-assets/2_boxenbilder/2026_bausparen/sBau-WebsiteHero-SWPS-2025-2800x835px.jpg.1772206498.x561yw2234h835.w3840w2560w1920w1280w1024w820w570_w570.webp"
+            alt="s Bausparen für mein Zukunfts-Ich"
+          />
+          <div class="interest-card-body">
+            <h3>s Bausparen für mein Zukunfts-Ich</h3>
+            <p>Der s Bausparvertrag. Sicher für die Träume von morgen sparen. Mit 5 % Startzinsen<sup>1</sup> für alle bis 30 Jahre.</p>
+            <a href="#" class="link-blue">Zum Jugend-Bausparen</a>
+          </div>
+        </article>
+        <article class="interest-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/424hQiX4bkZVtF8ks6Qt5awSKJqn/dam/at/sbau/www_sbausparkasse_at/gem-assets/2_boxenbilder/2026_darlehen/sBau-SWPF-2026-2140x1179-Side-plain.jpg.1774215059.xywh.w3840w2560w1920w1280w1024w820w570w360w220w120w64_w360.webp"
+            alt="Online-Finanzierungszusage"
+          />
+          <div class="interest-card-body">
+            <h3>Online-Finanzierungszusage</h3>
+            <p>Unser <em>Wohnglück Online</em> ist der schnellste Weg zu Ihrer Wohnraum-Finanzierung.</p>
+            <a href="#" class="link-blue">Darlehen berechnen</a>
+          </div>
+        </article>
+        <article class="interest-card">
+          <img
+            src="https://cdn0.erstegroup.com/gemlip/v2/A9S2y5RuPk3TjhwSHFutAjkkdWr/dam/at/sbau/www_sbausparkasse_at/gem-assets/1_header/Beratung_Hero_2800x835.png.1769610040.x509y18w2240h808.w3840w2560w1920w1280w1024w820w570_w570.webp"
+            alt="Karriere"
+          />
+          <div class="interest-card-body">
+            <h3>Karriere</h3>
+            <p>Werfen Sie einen Blick auf unsere aktuellen Jobangebote. Wir freuen uns auf Ihre Bewerbung!</p>
+            <a href="#" class="link-blue">Zu den offenen Stellen</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Kontakt -->
+    <section class="contact-section">
+      <h2 class="section-title">Kontakt</h2>
+      <ul class="contact-list">
+        <li class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          <span>Schreiben Sie uns<br>eine Nachricht</span>
+        </li>
+        <li class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Rückruf gewünscht?</span>
+        </li>
+        <li class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          <span>Service-Hotline:<br>+43 (0)5 0100-29097</span>
+        </li>
+        <li class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>s Wohnfinanz Regionen</span>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-share">
+      <span>Seite teilen</span>
+      <div class="social-links">
+        <a href="#" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="#" aria-label="Twitter/X">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="#" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-nav-section">
+      <div class="footer-nav-inner">
+        <div class="footer-breadcrumb">
+          <span>Startseite s Wohnfinanz</span>
+          <a href="#" class="back-to-top">↑ Nach oben</a>
+        </div>
+        <div class="footer-columns">
+          <div class="footer-col">
+            <h4>Bausparen</h4>
+            <h4><a href="#">Finanzieren</a></h4>
+            <ul>
+              <li><a href="#">Bausparfinanzierung</a></li>
+              <li><a href="#">Bankfinanzierung</a></li>
+            </ul>
+            <h4><a href="#">Versichern</a></h4>
+            <ul>
+              <li><a href="#">Wiener Städtische</a></li>
+              <li><a href="#">s Versicherung</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Kontakt</h4>
+            <ul>
+              <li><a href="#">Büros</a></li>
+              <li><a href="#">Kontakt</a></li>
+              <li><a href="#">Beratung</a></li>
+              <li><a href="#">Ombudsstelle</a></li>
+              <li><a href="#">Whistleblowing</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Online-Services</h4>
+            <ul>
+              <li><a href="#">Rechner-Übersicht</a></li>
+              <li><a href="#">Online-Finanzierungszusage</a></li>
+              <li><a href="#">Immobilienkalkulator</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Über die s Wohnfinanz</h4>
+            <ul>
+              <li><a href="#">Unternehmen</a></li>
+              <li><a href="#">Mission &amp; Ziele</a></li>
+              <li><a href="#">Angebot</a></li>
+              <li><a href="#">Leistungen</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Karriere</h4>
+            <ul>
+              <li><a href="#">Offene Stellen</a></li>
+              <li><a href="#">Benefits</a></li>
+            </ul>
+            <h4>Presse</h4>
+            <ul>
+              <li><a href="#">Pressebilder</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-logo-bar">
+      <img
+        src="https://cdn0.erstegroup.com/content/dam/at/swohnfinanz/common/AT-sWohnfinanz_Logo_screen_white.png"
+        alt="s Wohnfinanz"
+      />
+    </div>
+    <div class="footer-bottom">
+      <nav class="footer-legal">
+        <a href="#">Impressum &amp; Rechtliches</a>
+        <a href="#">Datenschutz &amp; Sicherheit</a>
+        <a href="#">Cookies</a>
+        <a href="#">Info Indikator</a>
+        <a href="#">Allg. Infos § 7 HIKrG</a>
+      </nav>
+      <p>© 2026 s Wohnfinanzierung Beratungs GmbH</p>
+    </div>
+  </footer>
+
+  <!-- Chat Widget -->
+  <div id="chat-container">
+    <button id="chat-toggle" aria-label="Chat öffnen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div id="webchat" role="complementary" style="display: none;"></div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>

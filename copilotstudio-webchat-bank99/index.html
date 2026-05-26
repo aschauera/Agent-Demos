@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>bank99 – wohnkredit99 | Immer da, wenn du uns brauchst.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/botframework-webchat@4.18.0/dist/webchat.js"></script>
+  <script src="https://unpkg.com/@azure/msal-browser@4.13.1/lib/msal-browser.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "@microsoft/agents-copilotstudio-client": "https://unpkg.com/@microsoft/agents-copilotstudio-client@1.1.0-alpha.58/dist/src/browser.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header id="site-header">
+    <div class="header-inner">
+      <a href="#" class="logo-link" aria-label="bank99 Startseite">
+        <span class="logo-text-b99">bank<em>99</em></span>
+      </a>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <a href="#" class="nav-link">Konten &amp; Karten</a>
+        <a href="#" class="nav-link nav-link--active">
+          Kredit
+          <svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#" class="nav-link">Anlegen &amp; Vorsorgen</a>
+        <a href="#" class="nav-link">Service</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" aria-label="Suche">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <a href="#" class="btn-login">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Mein Banking
+        </a>
+        <button class="icon-btn icon-btn--menu" aria-label="Menü">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <img
+        src="https://bank99media.imgix.net/Bank99_Whiteroom_sRGB-4500x3000.jpg?auto=format&auto=compress&w=1920&h=700&fit=crop"
+        alt="wohnkredit99 – bank99"
+        class="hero-bg"
+      />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <span class="hero-label">flexibel &amp; schnell</span>
+        <h1>Dein Traum von den<br>eigenen vier Wänden.</h1>
+        <p class="hero-subtitle"><span class="hero-product-highlight">wohnkredit99</span> macht's möglich.</p>
+        <div class="hero-actions">
+          <a href="#" class="btn-primary">Jetzt berechnen</a>
+          <a href="#" class="btn-outline-light">Termin vereinbaren</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- USP Strip -->
+    <div class="usp-strip">
+      <div class="usp-inner">
+        <div class="usp-item">
+          <div class="usp-number">€ 50.000</div>
+          <div class="usp-label">bis € 1.000.000 Kreditbetrag</div>
+        </div>
+        <div class="usp-item">
+          <div class="usp-number">5–35</div>
+          <div class="usp-label">Jahre Laufzeit wählbar</div>
+        </div>
+        <div class="usp-item">
+          <div class="usp-number">1.700+</div>
+          <div class="usp-label">Filialen in ganz Österreich</div>
+        </div>
+        <div class="usp-item">
+          <div class="usp-number">100%</div>
+          <div class="usp-label">transparente Kosten, kein Schnickschnack</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intro / Finanzierungssumme -->
+    <section class="content-section">
+      <h2>So ermittelst du deine Finanzierungssumme</h2>
+      <p>Egal, ob du eine fertige Wohnung kaufst oder ein neues Haus bauen willst: Die tatsächlich benötigte Finanzierungssumme ist meist höher, als man ursprünglich denkt. Oft wird erst einmal nur der Kaufpreis der neuen Immobilie betrachtet. Wesentliche Kosten werden übersehen oder falsch berechnet. Und selbst bei akribischer Kalkulation können unvorhersehbare Kosten hinzukommen. Daher hat es sich in der Praxis bewährt, beim Rechnen sehr großzügig nach oben zu runden und etwa&nbsp;20&nbsp;% Mehrkosten einzukalkulieren.</p>
+
+      <h3>Ein Überblick über die wichtigsten Einzelposten</h3>
+      <div class="cost-table-wrapper">
+        <table class="cost-table">
+          <tbody>
+            <tr>
+              <td>Direkte Kosten deiner Traumimmobilie</td>
+              <td><ul><li>Kaufpreis der Immobilie + Grunderwerbsteuer: 3,5&nbsp;% vom Kaufpreis</li></ul></td>
+            </tr>
+            <tr>
+              <td>Nebenkosten bei Kaufverträgen</td>
+              <td>
+                <ul>
+                  <li>Grundbuchseintragung (Einverleibungsgebühr Eigentumsrecht): 1,1&nbsp;% vom Kaufpreis zuzüglich Kosten der Eingabegebühr, der Liegenschaftsbesichtigung, …</li>
+                  <li>Kaufvertragserrichtung und grundbücherliche Durchführung (1&nbsp;– 5&nbsp;%)</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>Nebenkosten bei Hypothekardarlehen</td>
+              <td><ul><li>Kosten für die grundbücherliche Eintragung des Pfandrechts iHv 1,2&nbsp;% vom Pfandrechtsbetrag</li></ul></td>
+            </tr>
+            <tr>
+              <td>Sonstige Nebenkosten</td>
+              <td>
+                <ul>
+                  <li>Notariatskosten</li>
+                  <li>Beglaubigungen und Bearbeitungsgebühren</li>
+                  <li>Schätzgutachten und Immobilienbewertungen durch Sachverständige</li>
+                  <li>Verfahrenskosten und Verwaltungsabgabe für Grundverkehrsverfahren</li>
+                  <li>Bodenuntersuchung &amp; Vermessung</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>Makler</td>
+              <td><ul><li>Vermittlungsprovision</li></ul></td>
+            </tr>
+            <tr>
+              <td>Versicherungen</td>
+              <td>
+                <ul>
+                  <li>Versicherungen zur Absicherung des Kredits</li>
+                  <li>Versicherung Rohbauschutz</li>
+                  <li>Vinkulierungsgebühren</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>Umbauten und Renovierungen</td>
+              <td>
+                <ul>
+                  <li>Planungskosten für Architekten</li>
+                  <li>Heizung, Wand-/Bodenbeläge, Sanitärinstallationen, Elektroinstallationen, Fenster</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>Investition im Rahmen des Neubezugs</td>
+              <td>
+                <ul>
+                  <li>Möbel</li>
+                  <li>Umzugsunternehmen</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>Sicherheitspolster</td>
+              <td><ul><li>Mindestens 20&nbsp;% als Reserve obenauf</li></ul></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CTA Teaser -->
+    <section class="cta-teaser-section">
+      <div class="cta-teaser-inner">
+        <div class="cta-teaser-image">
+          <img
+            src="https://bank99media.imgix.net/b99_stapel_Hand_WEB_sRGB_2000x2000-hero-(3).png?auto=format&auto=compress&w=700&h=420&fit=crop"
+            alt="Wohnförderungen – bank99"
+          />
+        </div>
+        <div class="cta-teaser-body">
+          <h2>Wohnförderungen</h2>
+          <p>Günstiges Geld für deine Immobilie: Finanzielle Unterstützung für dein Bau- und Sanierungsprojekt – wir zeigen dir alle Möglichkeiten.</p>
+          <a href="#" class="btn-dark">Zu den Förderungen</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beratung CTA -->
+    <section class="advice-section">
+      <h2>Wir sind für dich da.</h2>
+      <p class="advice-subtitle">Lass dich von unseren Wohnfinanzierungsexpert*innen beraten – persönlich, telefonisch oder per Videoberatung.</p>
+      <div class="advice-actions">
+        <a href="#" class="btn-primary">Beratungstermin vereinbaren</a>
+        <a href="#" class="btn-outline-primary">Filiale finden</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo-row">
+      <div class="footer-logo-inner">
+        <a href="#" class="footer-logo-link" aria-label="bank99 Startseite">
+          <span class="footer-logo-text">bank<em>99</em></span>
+        </a>
+        <div class="footer-social">
+          <span>Folge uns</span>
+          <a href="https://www.facebook.com/bank99/" aria-label="Facebook" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/company/bank99/" aria-label="LinkedIn" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="https://www.instagram.com/bank99/" aria-label="Instagram" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.youtube.com/channel/UCFOsr_jKnL09uroJt3xdKAw/" aria-label="YouTube" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav-section">
+      <div class="footer-nav-inner">
+        <div class="footer-columns">
+          <div class="footer-col">
+            <h4>bank99</h4>
+            <ul>
+              <li><a href="#">Über uns</a></li>
+              <li><a href="#">Karriere</a></li>
+              <li><a href="#">Presse</a></li>
+              <li><a href="#">Nachhaltigkeit</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Produkte</h4>
+            <ul>
+              <li><a href="#">Konten &amp; Karten</a></li>
+              <li><a href="#">wohnkredit99</a></li>
+              <li><a href="#">rundumkredit99</a></li>
+              <li><a href="#">Anlegen &amp; Vorsorgen</a></li>
+              <li><a href="#">Versicherungen</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Service</h4>
+            <ul>
+              <li><a href="#">meine99 App</a></li>
+              <li><a href="#">okay99 App</a></li>
+              <li><a href="#">Filiale finden</a></li>
+              <li><a href="#">Häufige Fragen</a></li>
+              <li><a href="#">Blog</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Kontakt</h4>
+            <p class="footer-contact-text">Wir sind immer für dich da – in über 1.700 Filialen oder online.</p>
+            <a href="#" class="footer-contact-link">Jetzt Termin vereinbaren</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <nav class="footer-legal" aria-label="Rechtliche Links">
+        <a href="#">Impressum</a>
+        <a href="#">AGB</a>
+        <a href="#">Datenschutz</a>
+        <a href="#">Barrierefreiheit</a>
+        <a href="#">Konformitätserklärung</a>
+      </nav>
+      <p>© 2026, bank99 AG</p>
+    </div>
+  </footer>
+
+  <!-- Chat Widget -->
+  <div id="chat-container">
+    <div id="chat-popup" class="chat-popup hidden" role="status" aria-live="polite">
+      <button class="chat-popup-close" aria-label="Schließen">×</button>
+      <p>Hast du Fragen zu deinem <strong>wohnkredit99</strong>? Ich bin für dich da! 😊</p>
+    </div>
+    <button id="chat-toggle" aria-label="Chat öffnen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div id="webchat" role="complementary" style="display: none;"></div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>

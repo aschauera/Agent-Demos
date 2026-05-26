@@ -1,0 +1,14 @@
+mcs.metadata:
+  componentName: Microsoft Dataverse - Microsoft Dataverse MCP Server (Preview)
+kind: TaskDialog
+modelDisplayName: Dataverse Data
+modelDescription: Provides Remote MCP Server access to Dataverse with preview tools
+action:
+  kind: InvokeExternalAgentTaskAction
+  connectionReference: aschi_POReviewExpert.shared_commondataserviceforapps.f49857890c2248ea919b9dea5f0357b0
+  connectionProperties:
+    mode: Invoker
+
+  operationDetails:
+    kind: ModelContextProtocolMetadata
+    operationId: InvokeMCPPreview

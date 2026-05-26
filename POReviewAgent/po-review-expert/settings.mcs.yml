@@ -1,0 +1,31 @@
+displayName: PO Review Expert
+schemaName: aschi_POReviewExpert
+accessControlPolicy: GroupMembership
+authenticationMode: Integrated
+authenticationTrigger: Always
+configuration:
+  channels:
+    - channelId: MsTeams
+
+  settings:
+    GenerativeActionsEnabled: true
+
+  isAgentConnectable: true
+  publishOnImport: true
+  gPTSettings:
+    defaultSchemaName: aschi_POReviewExpert.gpt.default
+
+  isLightweightBot: false
+  aISettings:
+    useModelKnowledge: true
+    isFileAnalysisEnabled: true
+    isSemanticSearchEnabled: true
+    contentModeration: Low
+    optInUseLatestModels: false
+
+  recognizer:
+    kind: GenerativeAIRecognizer
+
+publishedOn: 2026-05-11T13:46:34.0000000Z
+template: default-2.1.0
+language: 1033

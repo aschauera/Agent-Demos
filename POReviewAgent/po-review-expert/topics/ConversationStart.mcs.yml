@@ -1,0 +1,15 @@
+mcs.metadata:
+  componentName: Conversation Start
+  description: This system topic triggers when the agent receives an Activity indicating the beginning of a new conversation. If you do not want the agent to initiate the conversation, disable this topic.
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnConversationStart
+  id: main
+  actions:
+    - kind: SendActivity
+      id: sendMessage_M0LuhV
+      activity:
+        text:
+          - "👋 Hello, and welcome! I'm {System.Bot.Name}, your dedicated assistant for purchase order reviews. 📑\n\nHere's how I can help:\n\n- 🔍 **Review purchase orders** for accuracy and completeness\n- ✅ **Check vendor compliance** against your requirements\n- 🚚 **Cross-reference POs with delivery data** to spot discrepancies\n\nTo get started, feel free to share a PO reference or 📎 upload an Excel sheet containing the purchase order details — I'll take it from there.\n\nHow may I assist you today? 😊"
+        speak:
+          - Hello and welcome. I'm {System.Bot.Name}, your assistant for reviewing purchase orders, checking vendor compliance, and cross-referencing delivery data. Please share a purchase order or upload an Excel sheet to get started. How may I assist you today?

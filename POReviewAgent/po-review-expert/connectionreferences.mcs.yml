@@ -1,0 +1,5 @@
+﻿connectionReferences:
+  - connectionReferenceLogicalName: aschi_POReviewExpert.shared_commondataserviceforapps.f49857890c2248ea919b9dea5f0357b0
+    connectorId: /providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps
+  - connectionReferenceLogicalName: aschi_POReviewExpert.shared_powertools.526f6e9cce5a4621a100f14238621ac5
+    connectorId: /providers/Microsoft.PowerApps/apis/shared_powertools

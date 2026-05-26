@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/@fluentui/web-components@beta/dist/web-components.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: var(--fontFamilyBase, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+      font-size: 14px;
+      line-height: 1.5;
+      background: var(--colorNeutralBackground1, #fff);
+      color: var(--colorNeutralForeground1, #242424);
+      overflow-x: hidden;
+    }
+
+    .deliveries {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .delivery-card {
+      border: 1px solid var(--colorNeutralStroke1, #e0e0e0);
+      border-radius: 12px;
+      padding: 20px 24px;
+      background: var(--colorNeutralBackground1, #fff);
+      transition: all 0.2s ease;
+    }
+
+    .delivery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .shipper-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .shipper-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--colorNeutralForeground1, #242424);
+    }
+
+    .tracking-number {
+      font-size: 0.75rem;
+      color: var(--colorNeutralForeground3, #707070);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .delivery-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .meta-label {
+      font-size: 0.75rem;
+      color: var(--colorNeutralForeground3, #707070);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .meta-value {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--colorNeutralForeground1, #242424);
+    }
+
+    /* ---------- Timeline ---------- */
+    .timeline {
+      position: relative;
+      padding: 24px 12px 8px;
+    }
+
+    .timeline-track {
+      position: relative;
+      height: 4px;
+      background: var(--colorNeutralStroke2, #ebebeb);
+      border-radius: 2px;
+      margin: 24px 12px;
+    }
+
+    .timeline-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(
+        90deg,
+        var(--colorBrandBackground, #0f6cbd) 0%,
+        var(--colorBrandBackground, #0f6cbd) 100%
+      );
+      overflow: hidden;
+    }
+
+    /* Running dots animation */
+    .timeline-progress::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.85) 1.5px,
+        transparent 2px
+      );
+      background-size: 16px 100%;
+      background-repeat: repeat-x;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .timeline-progress::after {
+        animation: runningDots 1.6s linear infinite;
+      }
+    }
+
+    @keyframes runningDots {
+      from { background-position: 0 50%; }
+      to { background-position: 16px 50%; }
+    }
+
+    .timeline-steps {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      margin-top: -34px;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--colorNeutralBackground1, #fff);
+      border: 2px solid var(--colorNeutralStroke1, #d1d1d1);
+      transition: all 0.2s ease;
+    }
+
+    .step.completed .step-dot {
+      background: var(--colorBrandBackground, #0f6cbd);
+      border-color: var(--colorBrandBackground, #0f6cbd);
+    }
+
+    .step.current .step-dot {
+      background: var(--colorBrandBackground, #0f6cbd);
+      border-color: var(--colorBrandBackground, #0f6cbd);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--colorBrandBackground, #0f6cbd) 25%, transparent);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .step.current .step-dot {
+        animation: blinkPulse 1.2s ease-in-out infinite;
+      }
+    }
+
+    @keyframes blinkPulse {
+      0%, 100% {
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--colorBrandBackground, #0f6cbd) 25%, transparent);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--colorBrandBackground, #0f6cbd) 0%, transparent);
+        transform: scale(1.15);
+      }
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      color: var(--colorNeutralForeground2, #424242);
+      text-align: center;
+      max-width: 100px;
+      line-height: 1.3;
+    }
+
+    .step.completed .step-label,
+    .step.current .step-label {
+      color: var(--colorNeutralForeground1, #242424);
+      font-weight: 600;
+    }
+
+    /* ---------- Footer info ---------- */
+    .delivery-footer {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--colorNeutralStroke2, #ebebeb);
+    }
+
+    .footer-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .notes {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: var(--colorNeutralBackground2, #f5f5f5);
+      border-radius: 8px;
+      border-left: 3px solid var(--colorBrandBackground, #0f6cbd);
+      font-size: 0.875rem;
+      color: var(--colorNeutralForeground2, #424242);
+    }
+
+    .notes.warning {
+      border-left-color: var(--colorStatusWarningForeground1, #bc4b09);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--colorNeutralBackground2, #f5f5f5);
+      color: var(--colorNeutralForeground1, #242424);
+    }
+
+    .status-badge.delivered {
+      background: color-mix(in srgb, var(--colorStatusSuccessForeground1, #0e7c41) 15%, transparent);
+      color: var(--colorStatusSuccessForeground1, #0e7c41);
+    }
+
+    .status-badge.in-progress {
+      background: color-mix(in srgb, var(--colorBrandBackground, #0f6cbd) 15%, transparent);
+      color: var(--colorBrandBackground, #0f6cbd);
+    }
+
+    .status-badge.waiting {
+      background: color-mix(in srgb, var(--colorStatusWarningForeground1, #bc4b09) 15%, transparent);
+      color: var(--colorStatusWarningForeground1, #bc4b09);
+    }
+
+    /* Loading / Error */
+    .center-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      gap: 12px;
+      color: var(--colorNeutralForeground2, #424242);
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--colorNeutralStroke2, #ebebeb);
+      border-top-color: var(--colorBrandBackground, #0f6cbd);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .step-label { font-size: 0.6875rem; max-width: 70px; }
+      .delivery-card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="widget-root"></div>
+  <script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps/+esm';
+    import { webLightTheme, webDarkTheme } from 'https://cdn.jsdelivr.net/npm/@fluentui/tokens/+esm';
+
+    // Canonical pipeline of stages
+    const STAGES = [
+      { key: 'waiting',     label: 'Waiting for dispatch' },
+      { key: 'dispatched',  label: 'Dispatched' },
+      { key: 'in_transit',  label: 'In transit' },
+      { key: 'last_mile',   label: 'Last mile delivery' },
+      { key: 'received',    label: 'Received' }
+    ];
+
+    // Map raw shipment_status -> stage index
+    function statusToStageIndex(status) {
+      if (!status) return 0;
+      const s = String(status).toLowerCase();
+      if (s.includes('waiting')) return 0;
+      if (s.includes('dispatch') && !s.includes('re')) return 1;
+      if (s.includes('distributed') || s === 'in transit' || s.includes('transit')) return 2;
+      if (s.includes('last mile')) return 3;
+      if (s.includes('deliver') || s.includes('received')) return 4;
+      return 0;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+      } catch { return '—'; }
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function badgeClass(stageIndex) {
+      if (stageIndex >= 4) return 'delivered';
+      if (stageIndex === 0) return 'waiting';
+      return 'in-progress';
+    }
+
+    function isWarningNote(note) {
+      if (!note) return false;
+      const n = note.toLowerCase();
+      return n.includes('discrepan') || n.includes('incompliant')
+          || n.includes('under review') || n.includes('hold')
+          || n.includes('quarantine') || n.includes('investigat');
+    }
+
+    function renderTimeline(currentIndex) {
+      const stepCount = STAGES.length;
+      // Progress fill: half-step past current dot when not delivered, full when delivered
+      let progressPct;
+      if (currentIndex >= stepCount - 1) {
+        progressPct = 100;
+      } else {
+        const stepWidth = 100 / (stepCount - 1);
+        progressPct = currentIndex * stepWidth + stepWidth * 0.5;
+      }
+
+      const steps = STAGES.map((s, i) => {
+        const cls = i < currentIndex ? 'completed' : (i === currentIndex ? 'current' : '');
+        return `
+          <div class="step ${cls}">
+            <div class="step-dot"></div>
+            <div class="step-label">${escapeHtml(s.label)}</div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="timeline">
+          <div class="timeline-track">
+            <div class="timeline-progress" style="width:${progressPct}%"></div>
+          </div>
+          <div class="timeline-steps">${steps}</div>
+        </div>`;
+    }
+
+    function normalizeDelivery(raw) {
+      if (!raw || typeof raw !== 'object') return {};
+      return {
+        shipment_status: raw.Delivery_Shipment_Status ?? raw.Shipment_Status ?? raw.shipment_status,
+        date_shipped: raw.Delivery_Date_Shipped ?? raw.Date_Shipped ?? raw.date_shipped,
+        shipper_tracking_number: raw.Delivery_Shipper_Tracking_Number ?? raw.Shipper_Tracking_Number ?? raw.shipper_tracking_number,
+        shipper_name: raw.Delivery_Shipper_Name ?? raw.Shipper_Name ?? raw.shipper_name,
+        estimated_delivery_date: raw.Delivery_Estimated_Delivery_Date ?? raw.Estimated_Delivery_Date ?? raw.estimated_delivery_date,
+        date_received: raw.Delivery_Date_Received ?? raw.Date_Received ?? raw.date_received,
+        notes: raw.Delivery_Notes ?? raw.Notes ?? raw.notes
+      };
+    }
+
+    function renderDelivery(raw) {
+      const d = normalizeDelivery(raw);
+      const stageIndex = statusToStageIndex(d.shipment_status);
+      const delivered = stageIndex >= 4;
+      const warnNote = isWarningNote(d.notes);
+
+      return `
+        <div class="delivery-card">
+          <div class="delivery-header">
+            <div class="shipper-info">
+              <div class="shipper-name">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;">
+                  <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9 1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                </svg>
+                ${escapeHtml(d.shipper_name || 'Unknown shipper')}
+              </div>
+              <div class="tracking-number">${escapeHtml(d.shipper_tracking_number || '—')}</div>
+              <div style="margin-top:6px;">
+                <span class="status-badge ${badgeClass(stageIndex)}">${escapeHtml(d.shipment_status || 'Unknown')}</span>
+              </div>
+            </div>
+            <div class="delivery-meta">
+              <span class="meta-label">${delivered ? 'Delivered on' : 'Estimated delivery'}</span>
+              <span class="meta-value">${fmtDate(delivered ? d.date_received : d.estimated_delivery_date)}</span>
+            </div>
+          </div>
+
+          ${renderTimeline(stageIndex)}
+
+          <div class="delivery-footer">
+            <div class="footer-item">
+              <span class="meta-label">Shipped</span>
+              <span class="meta-value">${fmtDate(d.date_shipped)}</span>
+            </div>
+            <div class="footer-item">
+              <span class="meta-label">Estimated</span>
+              <span class="meta-value">${fmtDate(d.estimated_delivery_date)}</span>
+            </div>
+            <div class="footer-item">
+              <span class="meta-label">Received</span>
+              <span class="meta-value">${fmtDate(d.date_received)}</span>
+            </div>
+          </div>
+
+          ${d.notes ? `<div class="notes ${warnNote ? 'warning' : ''}">${escapeHtml(d.notes)}</div>` : ''}
+        </div>`;
+    }
+
+    function renderLoading() {
+      document.getElementById('widget-root').innerHTML = `
+        <div class="center-state">
+          <div class="spinner"></div>
+          <div>Loading delivery status…</div>
+        </div>`;
+    }
+
+    function renderError(msg) {
+      document.getElementById('widget-root').innerHTML = `
+        <div class="center-state">
+          <div>${escapeHtml(msg)}</div>
+        </div>`;
+    }
+
+    function extractDeliveries(data) {
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.deliveries)) return data.deliveries;
+      if (Array.isArray(data.Deliveries)) return data.Deliveries;
+      // Nested single delivery: { Delivery: { ... } }
+      if (data.Delivery && typeof data.Delivery === 'object') return [data.Delivery];
+      // Flat single delivery object
+      if (typeof data === 'object') return [data];
+      return [];
+    }
+
+    function renderData(data) {
+      const deliveries = extractDeliveries(data).map(normalizeDelivery);
+      if (deliveries.length === 0) {
+        renderError('No deliveries to display.');
+        return;
+      }
+      // Sort: active shipments first, then by estimated delivery date
+      const sorted = [...deliveries].sort((a, b) => {
+        const ai = statusToStageIndex(a.shipment_status);
+        const bi = statusToStageIndex(b.shipment_status);
+        const aActive = ai < 4 ? 0 : 1;
+        const bActive = bi < 4 ? 0 : 1;
+        if (aActive !== bActive) return aActive - bActive;
+        const ad = new Date(a.estimated_delivery_date || a.date_received || 0).getTime();
+        const bd = new Date(b.estimated_delivery_date || b.date_received || 0).getTime();
+        return bd - ad;
+      });
+
+      document.getElementById('widget-root').innerHTML = `
+        <div class="deliveries">
+          ${sorted.map(renderDelivery).join('')}
+        </div>`;
+    }
+
+    function applyTheme(theme) {
+      const tokens = theme === 'dark' ? webDarkTheme : webLightTheme;
+      const root = document.documentElement;
+      for (const [token, value] of Object.entries(tokens)) {
+        root.style.setProperty('--' + token, value);
+      }
+      document.body.style.background = theme === 'dark'
+        ? 'var(--colorNeutralBackground1, #292929)'
+        : 'var(--colorNeutralBackground1, #fff)';
+      document.body.style.color = theme === 'dark'
+        ? 'var(--colorNeutralForeground1, #e0e0e0)'
+        : 'var(--colorNeutralForeground1, #242424)';
+    }
+
+    renderLoading();
+
+    const app = new App({ name: "delivery-status-widget", version: "1.0.0" });
+
+    const TEST_DATA = {
+      "Delivery": {
+        "Shipment_Status": "Waiting for dispatch",
+        "Date_Shipped": null,
+        "Shipper_Tracking_Number": "FX-7710-3382-001",
+        "Shipper_Name": "FedEx Priority",
+        "Estimated_Delivery_Date": "2026-05-14T22:00:00Z",
+        "Date_Received": null,
+        "Notes": "Awaiting dispatch — vendor (Summit Safety Gear) is currently Under Review, shipment on procurement hold pending compliance check."
+      }
+    };
+
+    app.ontoolresult = (result) => {
+      const data = result.structuredContent ?? TEST_DATA;
+      if (data) {
+        renderData(data);
+      } else {
+        renderError('No data received.');
+      }
+    };
+
+    app.onhostcontextchanged = (ctx) => {
+      if (ctx.theme) { applyTheme(ctx.theme); }
+    };
+
+    app.onteardown = () => ({});
+
+    try {
+      await app.connect();
+      const hostCtx = app.getHostContext();
+      if (hostCtx?.theme) { applyTheme(hostCtx.theme); }
+    } catch {
+      // No MCP host (e.g. plain browser / Live Server) — render test data
+      renderData(TEST_DATA);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Volksbank – ImmobilienFinanzierung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/botframework-webchat@4.18.0/dist/webchat.js"></script>
+  <script src="https://unpkg.com/@azure/msal-browser@4.13.1/lib/msal-browser.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "@microsoft/agents-copilotstudio-client": "https://unpkg.com/@microsoft/agents-copilotstudio-client@1.1.0-alpha.58/dist/src/browser.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header id="site-header">
+    <div class="header-inner">
+      <a href="#" class="logo-link" aria-label="Volksbank Startseite">
+        <img src="img/agent-logo-vb-square.png" alt="" class="logo-icon" aria-hidden="true" />
+        <span class="logo-text">VOLKSBANK</span>
+      </a>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <a href="#" class="nav-link nav-link--dropdown">
+          PRIVATE
+          <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" aria-label="Nachrichten">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </button>
+        <a href="#" class="btn-hausbanking">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          hausbanking
+        </a>
+        <button class="icon-btn" aria-label="Suche">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Menü">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <img
+        src="https://www.volksbank.at/medien/zib/images/privat/VB_Privat_HeroSectionImage_1280x720_72ppi-27.jpg"
+        alt="ImmobilienFinanzierung – Volksbank"
+        class="hero-bg"
+      />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>Immobilien<br>Finanzierung</h1>
+        <p class="hero-subtitle">Wie viel Geld brauche ich wirklich?</p>
+      </div>
+    </section>
+
+    <!-- Intro / Finanzierungssumme -->
+    <section class="content-section">
+      <div class="content-inner">
+        <h2>So ermitteln Sie Ihre Finanzierungssumme</h2>
+        <p>Egal, ob Sie eine fertige Wohnung kaufen oder ein neues Haus bauen wollen: Die tatsächlich benötigte Finanzierungssumme ist meist höher, als man ursprünglich denkt. Oft wird erst einmal nur der Kaufpreis der neuen Immobilien betrachtet. Wesentliche Kosten werden übersehen oder falsch berechnet. Und selbst bei akribischer Kalkulation können unvorhersehbare Kosten hinzukommen. Daher hat es sich in der Praxis bewährt, beim Rechnen sehr großzügig nach oben zu runden und etwa 20&nbsp;% Mehrkosten einzukalkulieren.</p>
+
+        <h3>Ein Überblick über die wichtigsten Einzelposten</h3>
+        <div class="cost-table-wrapper">
+          <table class="cost-table">
+            <tbody>
+              <tr>
+                <td>Direkte Kosten Ihrer Traumimmobilie</td>
+                <td><ul><li>Kaufpreis der Immobilie + Grunderwerbsteuer: 3,5&nbsp;% vom Kaufpreis</li></ul></td>
+              </tr>
+              <tr>
+                <td>Nebenkosten bei Kaufverträgen</td>
+                <td>
+                  <ul>
+                    <li>Grundbuchseintragung (Einverleibungsgebühr Eigentumsrecht): 1,1&nbsp;% vom Kaufpreis zuzüglich Kosten der Eingabegebühr, der Liegenschaftsbesichtigung, …</li>
+                    <li>Kaufvertragserrichtung und grundbücherliche Durchführung (1&nbsp;– 5&nbsp;%)</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>Nebenkosten bei Hypothekardarlehen</td>
+                <td><ul><li>Kosten für die grundbücherliche Eintragung des Pfandrechts iHv 1,2&nbsp;% vom Pfandrechtsbetrag</li></ul></td>
+              </tr>
+              <tr>
+                <td>Sonstige Nebenkosten</td>
+                <td>
+                  <ul>
+                    <li>Notariatskosten</li>
+                    <li>Beglaubigungen und Bearbeitungsgebühren</li>
+                    <li>Schätzgutachten und Immobilienbewertungen durch Sachverständige</li>
+                    <li>Verfahrenskosten und Verwaltungsabgabe für Grundverkehrsverfahren</li>
+                    <li>Bodenuntersuchung &amp; Vermessung</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>Makler</td>
+                <td><ul><li>Vermittlungsprovision</li></ul></td>
+              </tr>
+              <tr>
+                <td>Versicherungen</td>
+                <td>
+                  <ul>
+                    <li>Versicherungen zur Absicherung des Kredits</li>
+                    <li>Versicherung Rohbauschutz</li>
+                    <li>Vinkulierungsgebühren</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>Umbauten und Renovierungen</td>
+                <td>
+                  <ul>
+                    <li>Planungskosten für Architekten</li>
+                    <li>Heizung, Wand-/Bodenbeläge, Sanitärinstallationen, Elektroinstallationen, Fenster</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>Investition im Rahmen des Neubezugs</td>
+                <td>
+                  <ul>
+                    <li>Möbel</li>
+                    <li>Umzugsunternehmen</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>Sicherheitspolster</td>
+                <td><ul><li>Mindestens 20&nbsp;% als Reserve obenauf</li></ul></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Teaser -->
+    <section class="cta-teaser-section">
+      <div class="cta-teaser-inner">
+        <div class="cta-teaser-image">
+          <img
+            src="https://www.volksbank.at/medien/zib/images/privat/VB_Privat_CTA-TeaserFull_1300x640_72ppi-19.jpg"
+            alt="Förderungen – Volksbank"
+          />
+        </div>
+        <div class="cta-teaser-body">
+          <h2>Förderungen</h2>
+          <p>Billiges Geld für Ihre Immobilie: Finanzielle Unterstützung für Ihr Bau- und Sanierungsprojekt.</p>
+          <a href="#" class="btn-primary">Zu den Förderungen</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beratung CTA -->
+    <section class="advice-section">
+      <h2>Wir beraten Sie gerne.</h2>
+      <div class="advice-actions">
+        <a href="#" class="btn-primary">Beratungstermin vereinbaren</a>
+        <a href="#" class="btn-outline-primary">Filiale finden</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo-row">
+      <div class="footer-logo-inner">
+        <a href="#" class="footer-logo-link" aria-label="Volksbank Startseite">
+          <img src="img/agent-logo-vb-square.png" alt="" class="footer-logo-icon" aria-hidden="true" />
+          <span class="footer-logo-text">VOLKSBANK</span>
+        </a>
+        <div class="footer-social">
+          <span>Folgen Sie uns</span>
+          <a href="https://www.facebook.com/volksbank/" aria-label="Facebook" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/company/volksbank/" aria-label="LinkedIn" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="https://www.instagram.com/volksbank/" aria-label="Instagram" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.youtube.com/c/volksbank-official" aria-label="YouTube" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@volksbankat" aria-label="TikTok" rel="noopener noreferrer" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.19 8.19 0 0 0 4.79 1.53V6.77a4.85 4.85 0 0 1-1.02-.08z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav-section">
+      <div class="footer-nav-inner">
+        <div class="footer-columns">
+          <div class="footer-col">
+            <h4>Volksbank</h4>
+            <ul>
+              <li><a href="#">Über uns</a></li>
+              <li><a href="#">Karriere</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Volksbanken-Verbund</h4>
+            <ul>
+              <li><a href="#">Über den Verbund</a></li>
+              <li><a href="#">Nachhaltigkeit</a></li>
+              <li><a href="#">Genossenschaft</a></li>
+              <li><a href="#">Berichte</a></li>
+              <li><a href="#">Präsentationen</a></li>
+              <li><a href="#">Offenlegung</a></li>
+              <li><a href="#">Rating</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Aktuelles</h4>
+            <ul>
+              <li><a href="#">Mediaroom</a></li>
+              <li><a href="#">Presse</a></li>
+              <li><a href="#">News</a></li>
+              <li><a href="#">Blog</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Kontakt</h4>
+            <p class="footer-contact-text">Sie möchten sich beraten lassen oder Kontakt aufnehmen?</p>
+            <a href="#" class="footer-contact-link">Wechseln Sie jetzt auf die Seite Ihrer Regionalbank</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <nav class="footer-legal" aria-label="Rechtliche Links">
+        <a href="#">Impressum</a>
+        <a href="#">AGB</a>
+        <a href="#">Datenschutz</a>
+        <a href="#">Informationen zur Barrierefreiheit</a>
+        <a href="#">Konformitätserklärung</a>
+      </nav>
+      <p>© 2026, Volksbank</p>
+    </div>
+  </footer>
+
+  <!-- Chat Widget -->
+  <div id="chat-container">
+    <button id="chat-toggle" aria-label="Chat öffnen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div id="webchat" role="complementary" style="display: none;"></div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>

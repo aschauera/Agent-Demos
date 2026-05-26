@@ -1,0 +1,12 @@
+# Step 1: Get token from Copilot Studio
+# @name tokenResponse
+GET https://9e06df81b5ace8348cb6e2581b14cc.4f.environment.api.powerplatform.com/powervirtualagents/botsbyschema/copilots_header_new_LoanQualifier/directline/token?api-version=2022-03-01-preview
+
+###
+
+# Step 2: Start DirectLine conversation using the token
+# First verify the token was captured: {{tokenResponse.response.body.token}}
+@token = {{tokenResponse.response.body.token}}
+
+POST https://directline.botframework.com/v3/directline/conversations
+Authorization: Bearer {{token}}

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+
+  <!-- Dark navy background square -->
+  <rect width="100" height="100" rx="20" fill="#0D1B3E"/>
+
+  <!-- Speech bubble body -->
+  <rect x="11" y="11" width="78" height="58" rx="13" fill="#2356C3"/>
+
+  <!-- Speech bubble tail (bottom-left) -->
+  <polygon points="17,69 35,69 17,87" fill="#2356C3"/>
+
+  <!-- Sparkasse S shape: rounded rect with upper-right and lower-left cutouts -->
+  <defs>
+    <mask id="sparkasseS" maskUnits="userSpaceOnUse">
+      <!-- S body -->
+      <rect x="34" y="27" width="32" height="32" rx="6" fill="white"/>
+      <!-- Upper-right cutout -->
+      <rect x="50" y="28" width="15" height="17" rx="4" fill="black"/>
+      <!-- Lower-left cutout -->
+      <rect x="35" y="43" width="15" height="15" rx="4" fill="black"/>
+    </mask>
+  </defs>
+  <rect x="34" y="27" width="32" height="32" fill="white" mask="url(#sparkasseS)"/>
+  <!-- Dot above S (part of Sparkasse brand mark) -->
+  <circle cx="49" cy="21" r="4.5" fill="white"/>
+
+  <!-- Orange AI indicator badge (top-right) -->
+  <circle cx="82" cy="19" r="12" fill="#0D1B3E"/>
+  <circle cx="82" cy="19" r="9"  fill="#E85A00"/>
+
+  <!-- Sparkle / star shape inside orange badge -->
+  <path d="M82 13.5 L83.1 17.2 L87 17.2 L84 19.5 L85.1 23.2 L82 21 L78.9 23.2 L80 19.5 L77 17.2 L80.9 17.2 Z"
+        fill="white" opacity="0.95"/>
+
+</svg>

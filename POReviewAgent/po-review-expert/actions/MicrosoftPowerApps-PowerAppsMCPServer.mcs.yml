@@ -1,0 +1,14 @@
+mcs.metadata:
+  componentName: Microsoft Power Apps - Power Apps MCP Server
+kind: TaskDialog
+modelDisplayName: Power Apps MCP Server
+modelDescription: Power Apps MCP Server
+action:
+  kind: InvokeExternalAgentTaskAction
+  connectionReference: aschi_POReviewExpert.shared_powertools.526f6e9cce5a4621a100f14238621ac5
+  connectionProperties:
+    mode: Invoker
+
+  operationDetails:
+    kind: ModelContextProtocolMetadata
+    operationId: InvokeMCP

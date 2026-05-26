@@ -1,0 +1,11 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "copilotstudio-webclient": {
+      "appLocation": ".",
+      "outputLocation": ".",
+      "appName": "copilotstudio-webclient",
+      "resourceGroup": "copilotstudio-webclient-rg"
+    }
+  }
+}

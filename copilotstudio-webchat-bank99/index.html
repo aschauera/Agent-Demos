@@ -24,24 +24,28 @@
   <header id="site-header">
     <div class="header-inner">
       <a href="#" class="logo-link" aria-label="bank99 Startseite">
-        <span class="logo-text-b99">bank<em>99</em></span>
+        <img src="img/bank99-logo.png" alt="bank99" class="logo-image" />
       </a>
       <nav class="main-nav" aria-label="Hauptnavigation">
-        <a href="#" class="nav-link">Konten &amp; Karten</a>
-        <a href="#" class="nav-link nav-link--active">
-          Kredit
-          <svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a href="#" class="nav-link">Anlegen &amp; Vorsorgen</a>
-        <a href="#" class="nav-link">Service</a>
+        <a href="#" class="nav-link">Konto</a>
+        <a href="#" class="nav-link">Sparen</a>
+        <a href="#" class="nav-link nav-link--active">Finanzieren</a>
+        <a href="#" class="nav-link">Investieren</a>
+        <a href="#" class="nav-link">Vorsorgen</a>
+        <a href="#" class="nav-link">Blog</a>
+        <a href="#" class="nav-link">Über uns</a>
       </nav>
       <div class="header-actions">
         <button class="icon-btn" aria-label="Suche">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
+        <a href="#" class="btn-signup">
+          Kund*in werden
+          <svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
         <a href="#" class="btn-login">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Mein Banking
+          Login
+          <svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <button class="icon-btn icon-btn--menu" aria-label="Menü">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -53,21 +57,49 @@
   <main>
 
     <!-- Hero -->
-    <section class="hero">
-      <img
-        src="https://bank99media.imgix.net/Bank99_Whiteroom_sRGB-4500x3000.jpg?auto=format&auto=compress&w=1920&h=700&fit=crop"
-        alt="wohnkredit99 – bank99"
-        class="hero-bg"
-      />
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <span class="hero-label">flexibel &amp; schnell</span>
-        <h1>Dein Traum von den<br>eigenen vier Wänden.</h1>
-        <p class="hero-subtitle"><span class="hero-product-highlight">wohnkredit99</span> macht's möglich.</p>
-        <div class="hero-actions">
-          <a href="#" class="btn-primary">Jetzt berechnen</a>
-          <a href="#" class="btn-outline-light">Termin vereinbaren</a>
+    <section class="hero hero-home">
+      <div class="hero-shell">
+        <div class="hero-content">
+          <span class="hero-label">immer da</span>
+          <h1>Immer da, wenn du endlich das richtige Konto findest.</h1>
+          <p class="hero-subtitle">Jetzt einfach Konto eroeffnen, Kontowechsel bequem online beauftragen und Bonus sichern.</p>
+          <div class="hero-actions">
+            <a href="#" class="btn-primary">Zur Aktion</a>
+            <a href="#" class="btn-outline-primary">Mehr erfahren</a>
+          </div>
         </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-bonus-badge">EUR 100<br>Bonus</div>
+          <img src="img/hero-cards-stack.svg" alt="" class="hero-visual-image" />
+        </div>
+        <aside class="hero-quick-actions" aria-label="Direkteinstiege">
+          <a href="#" class="quick-action-link">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s-6-5.7-6-11a6 6 0 1 1 12 0c0 5.3-6 11-6 11z"/>
+              <circle cx="12" cy="10" r="2.4"/>
+            </svg>
+            <span>Standort finden</span>
+          </a>
+          <a href="#" class="quick-action-link">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2"/>
+              <line x1="16" y1="3" x2="16" y2="7"/>
+              <line x1="8" y1="3" x2="8" y2="7"/>
+              <line x1="3" y1="11" x2="21" y2="11"/>
+              <circle cx="17" cy="17" r="3"/>
+              <path d="m16.2 17 0.9 0.9 1.7-1.9"/>
+            </svg>
+            <span>Termin vereinbaren</span>
+          </a>
+          <a href="#" class="quick-action-link">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M9.4 9.2a2.6 2.6 0 1 1 4.1 2.1c-1.1 0.7-1.6 1.2-1.6 2.2"/>
+              <circle cx="12" cy="17.2" r="0.7" fill="currentColor" stroke="none"/>
+            </svg>
+            <span>Hilfe</span>
+          </a>
+        </aside>
       </div>
     </section>
 

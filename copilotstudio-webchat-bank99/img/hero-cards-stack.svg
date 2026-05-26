@@ -1,0 +1,42 @@
+<svg width="820" height="620" viewBox="0 0 820 620" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Illustration of cards and hand</title>
+  <desc id="desc">A stylized hand holding a black card above stacked colorful cards.</desc>
+  <ellipse cx="462" cy="560" rx="220" ry="38" fill="#9AA3B3" fill-opacity="0.34"/>
+
+  <g transform="translate(300 364) rotate(-17)">
+    <rect x="-108" y="60" width="238" height="132" rx="12" fill="#1176D0"/>
+    <rect x="-96" y="66" width="52" height="8" rx="4" fill="#D6E9FF" fill-opacity="0.72"/>
+  </g>
+  <g transform="translate(330 350) rotate(-12)">
+    <rect x="-106" y="58" width="238" height="132" rx="12" fill="#2F6A4E"/>
+    <rect x="-94" y="64" width="52" height="8" rx="4" fill="#D3F4E5" fill-opacity="0.72"/>
+  </g>
+  <g transform="translate(360 337) rotate(-8)">
+    <rect x="-105" y="56" width="238" height="132" rx="12" fill="#B14A36"/>
+    <rect x="-93" y="62" width="52" height="8" rx="4" fill="#FFD7CF" fill-opacity="0.72"/>
+  </g>
+  <g transform="translate(390 327) rotate(-4)">
+    <rect x="-104" y="54" width="238" height="132" rx="12" fill="#8C3BD1"/>
+    <rect x="-92" y="60" width="52" height="8" rx="4" fill="#ECD5FF" fill-opacity="0.72"/>
+  </g>
+  <g transform="translate(420 320)">
+    <rect x="-103" y="52" width="238" height="132" rx="12" fill="#D9A014"/>
+    <rect x="-91" y="58" width="52" height="8" rx="4" fill="#FFF0C9" fill-opacity="0.72"/>
+  </g>
+
+  <g transform="translate(500 282) rotate(18)">
+    <rect x="-132" y="-26" width="286" height="174" rx="24" fill="#1E2129"/>
+    <rect x="-108" y="-6" width="56" height="40" rx="8" fill="#D7D9DF"/>
+    <path d="M0 32C38 4 84 3 132 25V70C87 83 41 82 0 60V32Z" fill="#292D39"/>
+    <rect x="95" y="-2" width="42" height="42" rx="8" fill="#FFDC00"/>
+    <text x="98" y="18" fill="#0F1923" font-family="Arial, sans-serif" font-size="16" font-weight="700">99</text>
+    <circle cx="116" cy="110" r="20" fill="#EB001B"/>
+    <circle cx="136" cy="110" r="20" fill="#F79E1B" fill-opacity="0.84"/>
+  </g>
+
+  <g>
+    <ellipse cx="670" cy="260" rx="100" ry="66" fill="#F0C6A5"/>
+    <path d="M636 232C678 190 754 190 790 238C812 266 808 312 778 334C748 356 694 354 658 338C625 324 605 300 608 274C611 255 619 244 636 232Z" fill="#F4CFB2"/>
+    <ellipse cx="657" cy="258" rx="34" ry="26" fill="#E4B18D" fill-opacity="0.5"/>
+  </g>
+</svg>

@@ -18,12 +18,13 @@ flowchart TB
   end
  subgraph ORCH["🕹️ Orchestration Layer"]
         CS["📢 Copilot Studio Orchestrator Agent (Team Lead)"]
-        SA["🧭 Copilot Studio - Specialist Agent (Team Member)"]
+        SA1["🧭 Copilot Studio - Specialist Agent (Team Member)"]
+        SA2["🧭 Copilot Studio - Specialist Agent 2 (Team Member 2)"]
   end
 
- subgraph SYS["⚙️ Integration layer"]
+ subgraph SYS["⚙️ Integration (Tool) layer"]
         FT["🏗️ Azure Foundry SDKs"]
-        AIS["🔍 AI Search"]
+        AIM["🔍 HHosted LLMs"]
         AZS["Azure Services"]
         TOOL["🛠️ Tool"]
         API["🔗 API Interface"]
@@ -35,24 +36,32 @@ flowchart TB
         EXT["🌐 Other Agent FX"]
   end
 
- subgraph BIZ["Microsoft Business Agents (Dynamics)"]
+ subgraph BIZ["Microsoft Business Agents"]
       
         SALES["💰 Sales agent"]
         SERVICE["🛎️ Service agent"]
         MARK["📣 Marketing agent"]
+        ESS["👥 Employee Self Service agent"]
 
   end
  subgraph KNO["Knowledge Layer"]
         WIQ["🧠 WorkIQ"]
-        AIS2["🔎 AI Search"]
+        AIM["🔎 Foundry Hosted LLMs"]
         KNOC["🏥 LOB Knowledge Connectors"]
   end
+subgraph APP["App Layer (Apps in Chat)"]
+      MCPAPPS["MCP Apps"]
+      PA["Power Apps"]
+      OAIAPP["OpenAI App SDK"]
+end
+
  subgraph A365["💼 Agent 365"]
         ORCH
         SYS
         UI
         BIZ
         KNO
+        APP
   end 
 
 
@@ -60,14 +69,16 @@ flowchart TB
     M365 -- Simple retrieval agents --> AB
     UI -- Extended by --> ORCH & BIZ
     BIZ -- Extended by --> ORCH
-    SA -- "1..n" --> FT & A2A
-    CS -- "1..n" --> SA
-    FT -- Indexed knowledge --> AIS
+    ORCH -- "Orchestrating other agents" --> A2A
+    ORCH -- "Orchestrating hosted services" --> FT
+    ORCH -- "Orchestrating own tools" --> TOOL
+    ORCH -- "Surfacing knowledge" --> KNO
+    ORCH -- "Displays forms" --> APP
+    CS -- "1..n" --> SA1 & SA2
+    FT -- Indexed knowledge --> AIM
     TOOL -- API call --> API
     TOOL -- Data stream --> MCP
     TOOL -- Integration --> CWS
-    A2A -- "1..n" --> JOULE & AF & EXT
+    A2A -- "Calls agents" --> JOULE & AF & EXT
     FT -- Exposing --> AZS
-    SA -- "Uses 1..n" --> TOOL
-    ORCH --> KNO
- 
+    

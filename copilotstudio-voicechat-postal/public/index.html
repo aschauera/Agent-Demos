@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de-AT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Österreichische Post – Sprachassistent</title>
+  <link rel="stylesheet" href="index.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script crossorigin="anonymous" src="https://cdn.botframework.com/botframework-webchat/4.18.0/webchat.js"></script>
+</head>
+<body>
+  <header id="site-header">
+    <div class="header-inner">
+      <a href="#" class="logo-link" aria-label="Österreichische Post Startseite">
+        <img src="img/post-logo.svg" alt="Österreichische Post" class="logo-image" />
+      </a>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <a href="#" class="nav-link">Privat</a>
+        <a href="#" class="nav-link">Geschäftlich</a>
+        <a href="#" class="nav-link nav-link--active">Service</a>
+        <a href="#" class="nav-link">Über uns</a>
+      </nav>
+      <div class="header-actions">
+        <a href="#" class="btn-login">Mein Konto</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-shell">
+        <div class="hero-content">
+          <span class="hero-label">Sprachassistent</span>
+          <h1>Sprich einfach mit uns.</h1>
+          <p class="hero-subtitle">
+            Unser Sprachassistent beantwortet deine Fragen zu Sendungsverfolgung,
+            Filialen und Tarifen — per Spracheingabe oder Text. Klick auf das gelbe
+            Chat-Symbol unten rechts und leg los.
+          </p>
+          <div class="hero-actions">
+            <a href="#" class="btn-primary">Sendung verfolgen</a>
+            <a href="#" class="btn-outline-primary">Filiale finden</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-icon">
+            <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1v3" />
+              <path d="M12 20v3" />
+              <path d="M4.22 4.22l2.12 2.12" />
+              <path d="M17.66 17.66l2.12 2.12" />
+              <path d="M1 12h3" />
+              <path d="M20 12h3" />
+              <rect x="9" y="6" width="6" height="11" rx="3" />
+              <path d="M12 17v3" />
+              <path d="M9 20h6" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="usp-strip">
+      <div class="usp-inner">
+        <div class="usp-item">
+          <div class="usp-number">24/7</div>
+          <div class="usp-label">verfügbar — auch wenn die Filiale geschlossen hat</div>
+        </div>
+        <div class="usp-item">
+          <div class="usp-number">3 Sprachen</div>
+          <div class="usp-label">Deutsch (AT), Deutsch (DE), Englisch</div>
+        </div>
+        <div class="usp-item">
+          <div class="usp-number">100%</div>
+          <div class="usp-label">freihändig per Sprache bedienbar</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Was kann der Sprachassistent?</h2>
+      <ul class="feature-list">
+        <li><strong>Sendungsverfolgung:</strong> "Wo ist meine Sendung mit der Nummer …?"</li>
+        <li><strong>Filialsuche:</strong> "Welche Post-Filiale hat in meiner Nähe noch offen?"</li>
+        <li><strong>Tarife &amp; Porto:</strong> "Was kostet ein Brief nach Deutschland?"</li>
+        <li><strong>Servicezeiten:</strong> "Wann hat die Filiale am Stephansplatz geöffnet?"</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>© 2026 Österreichische Post AG · Demo-Anwendung · Powered by Microsoft Copilot Studio</p>
+    </div>
+  </footer>
+
+  <!-- Chat Widget -->
+  <div id="chat-container">
+    <div id="chat-popup" class="chat-popup hidden" role="status" aria-live="polite">
+      <button class="chat-popup-close" aria-label="Schließen">×</button>
+      <p>Frag mich was — auch per <strong>Sprache</strong>! 🎙️</p>
+    </div>
+    <button id="chat-toggle" aria-label="Chat öffnen">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor" />
+      </svg>
+    </button>
+    <div id="webchat-panel" class="webchat-panel" style="display:none;">
+      <div class="webchat-header">
+        <div class="webchat-title">Post-Sprachassistent</div>
+        <label class="webchat-locale">
+          <span class="sr-only">Sprache</span>
+          <select id="locale" name="locale">
+            <option value="de-AT">Deutsch (AT)</option>
+            <option value="de-DE">Deutsch (DE)</option>
+            <option value="en-US">English (US)</option>
+          </select>
+        </label>
+      </div>
+      <div id="webchat" role="main"></div>
+    </div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>

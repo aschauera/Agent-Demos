@@ -1,0 +1,179 @@
+/* Austrian Post brand colours: primary yellow #FFCC00, dark #1A1A1A */
+:root {
+  --post-yellow: #FFCC00;
+  --post-yellow-dark: #E6B800;
+  --post-dark: #1A1A1A;
+  --post-text: #2B2B2B;
+  --post-muted: #6B6B6B;
+  --post-bg: #FFFFFF;
+  --post-bg-subtle: #F7F7F7;
+  --post-border: #E5E5E5;
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--post-text);
+  background: var(--post-bg);
+  line-height: 1.6;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Header */
+#site-header {
+  background: var(--post-yellow);
+  border-bottom: 1px solid var(--post-yellow-dark);
+  position: sticky; top: 0; z-index: 100;
+}
+.header-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; gap: 24px;
+}
+.logo-image { height: 36px; display: block; }
+.main-nav { display: flex; gap: 22px; }
+.nav-link {
+  font-weight: 500; font-size: 15px; color: var(--post-dark);
+  padding: 6px 2px; border-bottom: 2px solid transparent;
+}
+.nav-link--active, .nav-link:hover {
+  border-bottom-color: var(--post-dark);
+}
+.btn-login {
+  background: var(--post-dark); color: #fff;
+  padding: 9px 18px; border-radius: 4px; font-weight: 600; font-size: 14px;
+}
+.btn-login:hover { background: #000; }
+
+/* Hero */
+.hero { background: var(--post-bg-subtle); padding: 64px 24px; }
+.hero-shell {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+}
+.hero-label {
+  display: inline-block; background: var(--post-yellow);
+  color: var(--post-dark); font-weight: 700;
+  font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 3px; margin-bottom: 18px;
+}
+.hero-content h1 {
+  font-size: 48px; line-height: 1.1; font-weight: 700;
+  margin: 0 0 16px; color: var(--post-dark);
+}
+.hero-subtitle { font-size: 18px; color: var(--post-muted); margin: 0 0 28px; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-primary {
+  background: var(--post-yellow); color: var(--post-dark);
+  padding: 13px 24px; border-radius: 4px; font-weight: 600; font-size: 15px;
+  border: 1px solid var(--post-yellow);
+}
+.btn-primary:hover { background: var(--post-yellow-dark); border-color: var(--post-yellow-dark); }
+.btn-outline-primary {
+  background: transparent; color: var(--post-dark);
+  padding: 13px 24px; border-radius: 4px; font-weight: 600; font-size: 15px;
+  border: 1px solid var(--post-dark);
+}
+.btn-outline-primary:hover { background: var(--post-dark); color: #fff; }
+.hero-visual {
+  display: flex; justify-content: center; align-items: center;
+  color: var(--post-yellow-dark);
+}
+.hero-icon {
+  background: var(--post-yellow); border-radius: 50%; padding: 36px;
+  color: var(--post-dark);
+  box-shadow: var(--shadow-md);
+}
+
+/* USP strip */
+.usp-strip { background: var(--post-dark); color: #fff; padding: 28px 24px; }
+.usp-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.usp-item { text-align: center; }
+.usp-number { font-size: 28px; font-weight: 700; color: var(--post-yellow); margin-bottom: 4px; }
+.usp-label { font-size: 14px; color: #d0d0d0; }
+
+/* Content */
+.content-section { max-width: 900px; margin: 0 auto; padding: 64px 24px; }
+.content-section h2 { font-size: 32px; margin: 0 0 24px; color: var(--post-dark); }
+.feature-list { list-style: none; padding: 0; }
+.feature-list li {
+  padding: 14px 0 14px 30px; border-bottom: 1px solid var(--post-border);
+  position: relative;
+}
+.feature-list li::before {
+  content: ""; position: absolute; left: 0; top: 22px;
+  width: 16px; height: 16px; border-radius: 50%; background: var(--post-yellow);
+}
+
+/* Footer */
+footer { background: var(--post-bg-subtle); border-top: 1px solid var(--post-border); padding: 24px; }
+.footer-inner {
+  max-width: 1200px; margin: 0 auto; text-align: center;
+  font-size: 13px; color: var(--post-muted);
+}
+
+/* Chat widget */
+#chat-container { position: fixed; bottom: 24px; right: 24px; z-index: 200; }
+
+#chat-toggle {
+  width: 64px; height: 64px; border-radius: 50%; border: none;
+  background: var(--post-yellow); color: var(--post-dark);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md); cursor: pointer; transition: transform 0.15s;
+}
+#chat-toggle:hover { transform: scale(1.05); background: var(--post-yellow-dark); }
+#chat-toggle:focus-visible { outline: 3px solid var(--post-dark); outline-offset: 2px; }
+
+.chat-popup {
+  position: absolute; right: 0; bottom: 80px;
+  background: #fff; border: 1px solid var(--post-border); border-radius: 12px;
+  padding: 14px 36px 14px 16px; max-width: 260px; font-size: 14px;
+  box-shadow: var(--shadow-md);
+}
+.chat-popup.hidden { display: none; }
+.chat-popup-close {
+  position: absolute; top: 6px; right: 8px; background: none; border: none;
+  font-size: 22px; line-height: 1; cursor: pointer; color: var(--post-muted);
+}
+
+.webchat-panel {
+  position: absolute; right: 0; bottom: 80px;
+  width: 380px; height: 580px;
+  background: #fff; border-radius: 14px; overflow: hidden;
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column;
+  border: 1px solid var(--post-border);
+}
+.webchat-header {
+  background: var(--post-yellow); color: var(--post-dark);
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--post-yellow-dark);
+}
+.webchat-title { font-weight: 700; font-size: 15px; }
+.webchat-locale select {
+  background: var(--post-dark); color: #fff; border: none;
+  padding: 4px 8px; border-radius: 4px; font-size: 13px;
+}
+#webchat { flex: 1; min-height: 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-shell { grid-template-columns: 1fr; }
+  .hero-content h1 { font-size: 32px; }
+  .usp-inner { grid-template-columns: 1fr; }
+  .main-nav { display: none; }
+  .webchat-panel { width: calc(100vw - 32px); height: calc(100vh - 140px); }
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48" role="img" aria-label="Österreichische Post (Demo)">
+  <rect x="0" y="6" width="36" height="36" rx="6" fill="#1A1A1A"/>
+  <path d="M8 14h20v6H14v4h14v6H8z" fill="#FFCC00"/>
+  <text x="46" y="32" font-family="Inter, -apple-system, Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#1A1A1A">POST</text>
+  <text x="110" y="32" font-family="Inter, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="500" fill="#6B6B6B">· Sprachassistent</text>
+</svg>

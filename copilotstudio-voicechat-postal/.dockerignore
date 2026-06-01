@@ -1,0 +1,11 @@
+node_modules
+server/node_modules
+server/.env
+.env
+.git
+.gitignore
+*.md
+!README.md
+.vscode
+.idea
+*.log

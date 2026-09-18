@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+requiredVersions:
+  azd: '>=1.27.1'
+  extensions:
+    azure.ai.agents: '>=1.0.0-beta.9'
+name: hr-systems-expert
+services:
+  ai-project:
+    host: azure.ai.project
+    deployments:
+      - name: gpt-5.4-mini
+        model:
+          format: OpenAI
+          name: gpt-5.4-mini
+          version: '2026-03-17'
+        sku:
+          name: GlobalStandard
+          capacity: 10
+  hr-systems-expert:
+    host: azure.ai.agent
+    metadata:
+      tags:
+        - HR
+        - Demo
+        - Agent Framework
+        - Activity Protocol
+        - Responses Protocol
+    project: src/hr-systems-expert
+    language: python
+    codeConfiguration:
+      runtime: python_3_13
+      entryPoint: main.py
+    uses:
+      - ai-project
+    kind: hosted
+    name: hr-systems-expert
+    description: Demo HR systems expert that retrieves mocked job role, salary range, and job-leveling data.
+    protocols:
+      - protocol: responses
+        version: 2.0.0
+      - protocol: a2a
+        version: 1.0.0
+      - protocol: activity
+        version: 2.0.0
+    agentEndpoint:
+      protocols:
+        - responses
+        - a2a
+        - activity
+      authorizationSchemes:
+        - type: Entra
+        - type: BotServiceTenant
+    agentCard:
+      description: Demo HR systems expert that returns mocked job role profiles, salary ranges, and job-leveling data.
+      version: '1.0'
+      skills:
+        - id: hr-job-data
+          name: HR Job Data
+          description: Retrieves fictional demo role, compensation, and leveling information from mocked HR LOB systems.
+          tags:
+            - HR
+            - job roles
+            - compensation
+            - job leveling
+          examples:
+            - What is the salary range for a Power Platform Architect?
+            - What is the typical job level for a Power Platform developer?
+    env:
+      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+    container:
+      resources:
+        cpu: '0.5'
+        memory: 1Gi
+infra:
+  provider: microsoft.foundry

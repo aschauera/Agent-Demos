@@ -1,0 +1,4 @@
+version: 1
+azd:
+  environmentName: hr-systems-expert-dev
+  service: hr-systems-expert

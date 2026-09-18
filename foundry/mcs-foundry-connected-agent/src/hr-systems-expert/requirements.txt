@@ -1,0 +1,8 @@
+agent-framework-foundry
+agent-framework-foundry-hosting>=1.0.0b260910
+azure-ai-agentserver-activity==1.0.0b3
+microsoft-agents-hosting-core
+microsoft-agents-authentication-msal
+microsoft-agents-activity
+aiohttp>=3.9.0
+debugpy

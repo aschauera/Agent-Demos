@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Copilot Studio Reporting Client</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Power Platform preview API</p>
+      <h1>Copilot Studio licensing report</h1>
+      <p>Request and inspect a <code>BillingDetailsPerEnvironment</code> report.</p>
+    </header>
+
+    <section class="notice" aria-label="Preview limitations">
+      <strong>Preview limitations:</strong> The API must be enabled for a North America home-geo tenant.
+      The signed-in user must belong to the tenant and be a Global, Power Platform, or Dynamics 365 administrator.
+    </section>
+
+    <section class="card">
+      <h2>Report request</h2>
+      <p id="user-label"></p>
+      <form id="report-form">
+        <label>
+          Tenant ID
+          <input id="tenant-id" name="tenantId" type="text" autocomplete="off" required
+                 pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}">
+        </label>
+
+        <label>
+          Delegated access token
+          <input id="access-token" name="token" type="password" autocomplete="off" required>
+          <span class="hint">Kept in browser memory only. Use the Power Automate service audience.</span>
+        </label>
+
+        <div class="field-row">
+          <label>
+            Start date
+            <input id="start-date" name="startDate" type="date" required>
+          </label>
+          <label>
+            End date
+            <input id="end-date" name="endDate" type="date" required>
+          </label>
+          <label>
+            Granularity
+            <select id="granularity" name="granularity">
+              <option value="Daily">Daily</option>
+              <option value="Summary">Summary</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="submit-report" type="submit">Request report</button>
+          <button id="cancel-report" class="secondary" type="button" disabled>Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-live="polite">
+      <h2>Status</h2>
+      <div id="generation-indicator" class="generation-indicator" role="status"
+           aria-label="Generating report" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Generating report</span>
+        <span class="animated-dots" aria-hidden="true"></span>
+      </div>
+      <div id="poll-countdown" class="poll-countdown" hidden>
+        <div class="poll-countdown-label">
+          <span>Next status check</span>
+          <output id="poll-time">5:00 remaining</output>
+        </div>
+        <progress id="poll-progress" max="300" value="0"
+                  aria-label="Time until next report status check"></progress>
+        <p class="hint">Report generation may require more than one status check.</p>
+      </div>
+      <p id="status" class="status" data-phase="ready"></p>
+      <p id="error" class="error" role="alert" hidden></p>
+    </section>
+
+    <section id="results" class="card" hidden>
+      <div class="results-heading">
+        <div>
+          <h2>Report data</h2>
+          <p id="result-summary"></p>
+        </div>
+        <a id="download-report" class="button" href="#">Download .csv.gz</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="report-head"></thead>
+          <tbody id="report-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="./config.local.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

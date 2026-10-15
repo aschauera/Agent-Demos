@@ -19,44 +19,27 @@ Copy `config.example.js` to `config.local.js` and enter the tenant ID and user
 principal name. `config.local.js` is ignored by Git. These values are display
 defaults only; the app does not perform sign-in.
 
-## Get a delegated token
+## Authentication
 
-Sign in using the tenant administrator:
+The recommended startup script signs in with Azure CLI and transfers the
+delegated token directly to the localhost client using a one-time, in-memory
+handoff. It does not print, log, or persist the token.
 
-```powershell
-az login `
-  --tenant "<tenant-id>" `
-  --allow-no-subscriptions
-```
-
-Select the configured tenant administrator when the browser sign-in opens.
-
-Request a delegated token for the Power Automate service:
-
-```powershell
-az account get-access-token `
-  --resource "https://service.flow.microsoft.com/" `
-  --tenant "<tenant-id>" `
-  --query accessToken `
-  --output tsv
-```
-
-Do not save the token to a file. Paste it into the password-style token field;
-the client keeps it in browser memory only and clears the field when the page
-unloads.
+The browser client still accepts a manually supplied delegated token for
+development scenarios. Use an approved secure acquisition workflow that does
+not print, log, redirect, or persist the credential. The client keeps a pasted
+token in browser memory only and clears the field when the page unloads.
 
 ## Run
 
-The startup script signs in to the configured tenant, prints the short-lived
-Power Automate access token, starts the local server, waits for it to become
-available, and opens the app:
+The startup script signs in to the configured tenant, acquires the short-lived
+Power Automate access token without printing it, starts a fresh local server,
+waits for its demo-specific health response, transfers the token through a
+one-time in-memory handoff, and opens the app:
 
 ```powershell
 .\start-reporting-client.ps1
 ```
-
-Treat the printed token like a password. Paste it into the app, do not share it,
-and close the terminal when it is no longer needed.
 
 To use a different local port:
 
@@ -96,3 +79,6 @@ npm test
 - **Decompression error**: Confirm the download is the generated `.csv.gz` file
   and use a current Edge, Chrome, or Firefox release with
   `DecompressionStream` support.
+- **Port already in use**: Stop the existing server or choose another port with
+  `.\start-reporting-client.ps1 -Port 8081`. The launcher refuses to open an
+  unrelated service or reuse a server that cannot receive the one-time token.

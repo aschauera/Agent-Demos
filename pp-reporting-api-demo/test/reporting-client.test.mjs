@@ -9,6 +9,7 @@ import {
   withApiVersion
 } from "../reporting-client.mjs";
 
+const API_ORIGIN = "https://preview.api.flow.microsoft.com";
 const validInput = {
   tenantId: "00000000-0000-4000-8000-000000000000",
   token: "test-token",
@@ -28,12 +29,13 @@ test("validates tenant ID and date order", () => {
   );
 });
 
-test("adds the API version without replacing an existing version", () => {
-  assert.match(withApiVersion("https://example.test/operation"), /api-version=2016-11-01/);
+test("forces the required API version and rejects untrusted origins", () => {
+  assert.match(withApiVersion(`${API_ORIGIN}/operation`), /api-version=2016-11-01/);
   assert.equal(
-    withApiVersion("https://example.test/operation?api-version=future"),
-    "https://example.test/operation?api-version=future"
+    withApiVersion(`${API_ORIGIN}/operation?api-version=future`),
+    `${API_ORIGIN}/operation?api-version=2016-11-01`
   );
+  assert.throws(() => withApiVersion("https://example.test/operation"), /untrusted API origin/);
 });
 
 test("parses quoted commas, quotes, and line breaks", () => {
@@ -57,12 +59,12 @@ test("follows running, success, and download responses", async () => {
   const responses = [
     response("", {
       status: 202,
-      headers: { Location: "https://example.test/operation/1", "Retry-After": "3" }
+      headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "3" }
     }),
     response({ status: "Running" }, { headers: { "Retry-After": "7" } }),
     response(
       { status: "Succeeded", fileName: "report.csv.gz" },
-      { headers: { Location: "https://example.test/files/report.csv.gz" } }
+      { headers: { Location: `${API_ORIGIN}/files/report.csv.gz` } }
     ),
     response(gzipSync(csv))
   ];
@@ -89,7 +91,7 @@ test("surfaces terminal failure details", async () => {
   const responses = [
     response("", {
       status: 202,
-      headers: { Location: "https://example.test/operation/1", "Retry-After": "0" }
+      headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "0" }
     }),
     response({ status: "Failed", error: "Generation unavailable." })
   ];
@@ -126,7 +128,7 @@ test("supports cancellation while waiting", async () => {
   const pending = requestReport(validInput, {
     fetchImpl: async () => response("", {
       status: 202,
-      headers: { Location: "https://example.test/operation/1", "Retry-After": "300" }
+      headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "300" }
     }),
     signal: controller.signal
   });
@@ -139,11 +141,11 @@ test("rejects malformed gzip downloads", async () => {
   const responses = [
     response("", {
       status: 202,
-      headers: { Location: "https://example.test/operation/1", "Retry-After": "0" }
+      headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "0" }
     }),
     response(
       { status: "Succeeded", fileName: "report.csv.gz" },
-      { headers: { Location: "https://example.test/files/report.csv.gz" } }
+      { headers: { Location: `${API_ORIGIN}/files/report.csv.gz` } }
     ),
     response("not gzip")
   ];
@@ -156,6 +158,127 @@ test("rejects malformed gzip downloads", async () => {
     /valid gzip/
   );
 });
+
+test("rejects untrusted operation and download Location headers", async (context) => {
+  await context.test("operation URL", async () => {
+    await assert.rejects(
+      requestReport(validInput, {
+        fetchImpl: async () => response("", {
+          status: 202,
+          headers: { Location: "https://example.test/operation/1", "Retry-After": "0" }
+        }),
+        wait: async () => {}
+      }),
+      /untrusted API origin/
+    );
+  });
+
+  await context.test("download URL", async () => {
+    const responses = [
+      response("", {
+        status: 202,
+        headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "0" }
+      }),
+      response(
+        { status: "Succeeded", fileName: "report.csv.gz" },
+        { headers: { Location: "https://example.test/files/report.csv.gz" } }
+      )
+    ];
+
+    await assert.rejects(
+      requestReport(validInput, {
+        fetchImpl: async () => responses.shift(),
+        wait: async () => {}
+      }),
+      /untrusted API origin/
+    );
+  });
+});
+
+test("preserves cancellation while reading a poll response body", async () => {
+  const abortError = new DOMException("Cancelled", "AbortError");
+  const responses = [
+    response("", {
+      status: 202,
+      headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "0" }
+    }),
+    {
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => {
+        throw abortError;
+      }
+    }
+  ];
+
+  await assert.rejects(
+    requestReport(validInput, {
+      fetchImpl: async () => responses.shift(),
+      wait: async () => {}
+    }),
+    (error) => error === abortError
+  );
+});
+
+test("does not complete after cancellation during download processing", async (context) => {
+  const csv = "EnvironmentId,EnvironmentName\r\nenv-1,Demo\r\n";
+
+  await context.test("after reading the archive", async () => {
+    const controller = new AbortController();
+    const responses = successfulDownloadResponses();
+    responses.push({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      blob: async () => {
+        controller.abort(new DOMException("Cancelled", "AbortError"));
+        return new Blob();
+      }
+    });
+
+    await assert.rejects(
+      requestReport(validInput, {
+        fetchImpl: async () => responses.shift(),
+        wait: async () => {},
+        signal: controller.signal
+      }),
+      (error) => error.name === "AbortError"
+    );
+  });
+
+  await context.test("after decompression", async () => {
+    const controller = new AbortController();
+    const responses = successfulDownloadResponses();
+    responses.push(response(gzipSync(csv)));
+
+    await assert.rejects(
+      requestReport(validInput, {
+        fetchImpl: async () => responses.shift(),
+        wait: async () => {},
+        signal: controller.signal,
+        decompress: async () => {
+          controller.abort(new DOMException("Cancelled", "AbortError"));
+          return csv;
+        }
+      }),
+      (error) => error.name === "AbortError"
+    );
+  });
+});
+
+function successfulDownloadResponses() {
+  return [
+    response("", {
+      status: 202,
+      headers: { Location: `${API_ORIGIN}/operation/1`, "Retry-After": "0" }
+    }),
+    response(
+      { status: "Succeeded", fileName: "report.csv.gz" },
+      { headers: { Location: `${API_ORIGIN}/files/report.csv.gz` } }
+    )
+  ];
+}
 
 function response(body, init = {}) {
   const normalizedBody = typeof body === "object" && !ArrayBuffer.isView(body) && !(body instanceof Blob)

@@ -6,6 +6,10 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const port = Number.parseInt(process.env.PORT ?? "8080", 10);
+let bootstrapToken = process.env.REPORTING_ACCESS_TOKEN;
+let bootstrapNonce = process.env.REPORTING_BOOTSTRAP_NONCE;
+delete process.env.REPORTING_ACCESS_TOKEN;
+delete process.env.REPORTING_BOOTSTRAP_NONCE;
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -20,6 +24,43 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 createServer(async (request, response) => {
   try {
     const requestUrl = new URL(request.url ?? "/", "http://localhost");
+
+    if (requestUrl.pathname === "/health") {
+      response.writeHead(200, {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json; charset=utf-8",
+        "X-Reporting-Client": "pp-reporting-api-demo"
+      }).end('{"service":"pp-reporting-api-demo"}');
+      return;
+    }
+
+    if (requestUrl.pathname === "/session-token") {
+      if (request.method !== "POST") {
+        response.writeHead(405, { Allow: "POST" }).end();
+        return;
+      }
+
+      const suppliedNonce = request.headers["x-bootstrap-nonce"];
+      if (!bootstrapToken || !bootstrapNonce) {
+        response.writeHead(204, { "Cache-Control": "no-store" }).end();
+        return;
+      }
+      if (suppliedNonce !== bootstrapNonce) {
+        response.writeHead(403, { "Cache-Control": "no-store" }).end("Forbidden");
+        return;
+      }
+
+      const responseBody = JSON.stringify({ accessToken: bootstrapToken });
+      bootstrapToken = undefined;
+      bootstrapNonce = undefined;
+      response.writeHead(200, {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json; charset=utf-8",
+        "X-Content-Type-Options": "nosniff"
+      }).end(responseBody);
+      return;
+    }
+
     const requestedPath = requestUrl.pathname === "/"
       ? "index.html"
       : decodeURIComponent(requestUrl.pathname).replace(/^[/\\]+/, "");

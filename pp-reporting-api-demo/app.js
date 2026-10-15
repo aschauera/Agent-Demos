@@ -26,7 +26,11 @@ let activeController;
 let downloadObjectUrl;
 let pollTimer;
 
-initialize();
+initialize().catch((error) => {
+  updateStatus({ phase: "failed", message: "The startup token could not be loaded." });
+  errorPanel.textContent = error instanceof Error ? error.message : "Unexpected startup error.";
+  errorPanel.hidden = false;
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -75,7 +79,7 @@ window.addEventListener("beforeunload", () => {
   revokeDownloadUrl();
 });
 
-function initialize() {
+async function initialize() {
   tenantInput.value = config.tenantId ?? "";
   userLabel.textContent = config.userPrincipalName
     ? `Sign in as ${config.userPrincipalName}.`
@@ -87,6 +91,33 @@ function initialize() {
   endDateInput.value = toDateInput(endDate);
   startDateInput.value = toDateInput(startDate);
   updateStatus({ phase: "ready", message: "Ready to request a report." });
+  await loadBootstrapToken();
+}
+
+async function loadBootstrapToken() {
+  const bootstrapNonce = new URLSearchParams(location.hash.slice(1)).get("bootstrap");
+  if (!bootstrapNonce) {
+    return;
+  }
+
+  history.replaceState(null, "", `${location.pathname}${location.search}`);
+  const response = await fetch("/session-token", {
+    method: "POST",
+    headers: { "X-Bootstrap-Nonce": bootstrapNonce },
+    cache: "no-store",
+    redirect: "error"
+  });
+  if (!response.ok) {
+    throw new Error(`The local server rejected the startup token handoff (HTTP ${response.status}).`);
+  }
+
+  const body = await response.json();
+  if (typeof body.accessToken !== "string" || !body.accessToken) {
+    throw new Error("The local server did not provide a valid startup token.");
+  }
+
+  tokenInput.value = body.accessToken;
+  updateStatus({ phase: "ready", message: "Ready. The delegated token was loaded securely." });
 }
 
 function updateStatus({ phase, message, retryAfter }) {

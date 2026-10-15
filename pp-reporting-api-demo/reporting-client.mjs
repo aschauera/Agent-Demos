@@ -1,6 +1,7 @@
 const API_VERSION = "2016-11-01";
 const REPORT_NAME = "BillingDetailsPerEnvironment";
 const API_ROOT = "https://preview.api.flow.microsoft.com/copilotstudio/tenants";
+const TRUSTED_API_ORIGIN = new URL(API_ROOT).origin;
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,10 +33,20 @@ export function validateRequest({ tenantId, token, startDate, endDate, granulari
 }
 
 export function withApiVersion(value) {
-  const url = new URL(value);
-  if (!url.searchParams.has("api-version")) {
-    url.searchParams.set("api-version", API_VERSION);
+  let url;
+  try {
+    url = new URL(value);
+  } catch (error) {
+    throw new ReportingApiError("The API returned an invalid request URL.", { cause: error });
   }
+
+  if (url.origin !== TRUSTED_API_ORIGIN) {
+    throw new ReportingApiError(
+      `Refusing to send credentials to an untrusted API origin: ${url.origin}.`
+    );
+  }
+
+  url.searchParams.set("api-version", API_VERSION);
   return url.toString();
 }
 
@@ -65,6 +76,7 @@ export async function requestReport(input, options = {}) {
   validateRequest(input);
   const fetchImpl = options.fetchImpl ?? fetch;
   const wait = options.wait ?? delay;
+  const decompress = options.decompress ?? decompressGzip;
   const onState = options.onState ?? (() => {});
   const signal = options.signal;
   const token = input.token.trim();
@@ -88,7 +100,7 @@ export async function requestReport(input, options = {}) {
     throw await createResponseError(submission, "The report request was rejected.");
   }
 
-  let operationUrl = requireHeader(submission, "Location");
+  let operationUrl = withApiVersion(requireHeader(submission, "Location"));
   let retryAfter = parseRetryAfter(submission.headers.get("Retry-After"));
   let downloadUrl;
   let fileName;
@@ -103,7 +115,7 @@ export async function requestReport(input, options = {}) {
 
     const pollResponse = await apiFetch(
       fetchImpl,
-      withApiVersion(operationUrl),
+      operationUrl,
       token,
       { signal }
     );
@@ -117,7 +129,7 @@ export async function requestReport(input, options = {}) {
         retryAfter = parseRetryAfter(pollResponse.headers.get("Retry-After"));
         break;
       case "Succeeded":
-        downloadUrl = requireHeader(pollResponse, "Location");
+        downloadUrl = withApiVersion(requireHeader(pollResponse, "Location"));
         fileName = operation.fileName;
         if (typeof fileName !== "string" || !fileName.endsWith(".csv.gz")) {
           throw new ReportingApiError("The completed operation did not return a valid .csv.gz file name.");
@@ -137,7 +149,7 @@ export async function requestReport(input, options = {}) {
   onState({ phase: "downloading", message: "Downloading and reading the generated report..." });
   const downloadResponse = await apiFetch(
     fetchImpl,
-    withApiVersion(downloadUrl),
+    downloadUrl,
     token,
     { signal }
   );
@@ -146,8 +158,11 @@ export async function requestReport(input, options = {}) {
   }
 
   const archive = await downloadResponse.blob();
-  const csvText = await decompressGzip(archive);
+  signal?.throwIfAborted();
+  const csvText = await decompress(archive);
+  signal?.throwIfAborted();
   const table = parseCsv(csvText);
+  signal?.throwIfAborted();
   onState({
     phase: "complete",
     message: `Report complete. ${table.rows.length} data row${table.rows.length === 1 ? "" : "s"} loaded.`
@@ -247,6 +262,7 @@ async function apiFetch(fetchImpl, url, token, init) {
   try {
     return await fetchImpl(url, {
       ...init,
+      redirect: "error",
       headers: {
         ...init?.headers,
         Authorization: `Bearer ${token}`
@@ -270,7 +286,10 @@ async function createResponseError(response, fallbackMessage) {
     const body = await response.json();
     code = body?.error?.code;
     message = body?.error?.message;
-  } catch {
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw error;
+    }
     message = undefined;
   }
 
@@ -285,6 +304,9 @@ async function readJson(response, message) {
   try {
     return await response.json();
   } catch (error) {
+    if (error?.name === "AbortError") {
+      throw error;
+    }
     throw new ReportingApiError(message, { cause: error });
   }
 }

@@ -177,6 +177,54 @@ button:disabled {
   animation: dots 1.2s steps(4, end) infinite;
 }
 
+.poll-countdown {
+  max-width: 34rem;
+  margin-bottom: 1rem;
+  border-radius: 0.55rem;
+  padding: 0.85rem 1rem;
+  background: #f7f5ff;
+}
+
+.poll-countdown-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.45rem;
+  color: #413691;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.poll-countdown progress {
+  display: block;
+  width: 100%;
+  height: 0.8rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: #ded9fa;
+  accent-color: #5646b9;
+}
+
+.poll-countdown progress::-webkit-progress-bar {
+  background: #ded9fa;
+}
+
+.poll-countdown progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7665dc, #4d3bae);
+  transition: width 0.25s linear;
+}
+
+.poll-countdown progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7665dc, #4d3bae);
+}
+
+.poll-countdown .hint {
+  margin: 0.45rem 0 0;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

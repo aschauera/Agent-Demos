@@ -72,7 +72,8 @@ npm start
 
 Open <http://localhost:8080>, paste the token, select a small date range, and
 request the report. Report generation can take several minutes. The client
-respects each server-provided `Retry-After` interval.
+respects each server-provided `Retry-After` interval and displays a countdown
+progress bar showing the time remaining until the next status check.
 
 Run the mocked workflow tests with:
 

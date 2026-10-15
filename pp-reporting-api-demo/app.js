@@ -11,6 +11,9 @@ const submitButton = document.querySelector("#submit-report");
 const cancelButton = document.querySelector("#cancel-report");
 const statusPanel = document.querySelector("#status");
 const generationIndicator = document.querySelector("#generation-indicator");
+const pollCountdown = document.querySelector("#poll-countdown");
+const pollProgress = document.querySelector("#poll-progress");
+const pollTime = document.querySelector("#poll-time");
 const errorPanel = document.querySelector("#error");
 const userLabel = document.querySelector("#user-label");
 const resultsPanel = document.querySelector("#results");
@@ -21,6 +24,7 @@ const downloadLink = document.querySelector("#download-report");
 
 let activeController;
 let downloadObjectUrl;
+let pollTimer;
 
 initialize();
 
@@ -67,6 +71,7 @@ cancelButton.addEventListener("click", () => {
 window.addEventListener("beforeunload", () => {
   tokenInput.value = "";
   activeController?.abort();
+  stopPollCountdown();
   revokeDownloadUrl();
 });
 
@@ -84,10 +89,61 @@ function initialize() {
   updateStatus({ phase: "ready", message: "Ready to request a report." });
 }
 
-function updateStatus({ phase, message }) {
+function updateStatus({ phase, message, retryAfter }) {
   statusPanel.dataset.phase = phase;
   statusPanel.textContent = message;
   generationIndicator.hidden = !["submitting", "waiting", "downloading"].includes(phase);
+
+  if (phase === "waiting" && Number.isFinite(retryAfter)) {
+    startPollCountdown(retryAfter);
+  } else {
+    stopPollCountdown();
+  }
+}
+
+function startPollCountdown(durationSeconds) {
+  stopPollCountdown();
+
+  const startedAt = Date.now();
+  const durationMilliseconds = durationSeconds * 1000;
+  pollProgress.max = Math.max(durationSeconds, 1);
+  pollProgress.value = 0;
+  pollCountdown.hidden = false;
+
+  const updateCountdown = () => {
+    const elapsedMilliseconds = Math.min(Date.now() - startedAt, durationMilliseconds);
+    const remainingSeconds = Math.max(
+      0,
+      Math.ceil((durationMilliseconds - elapsedMilliseconds) / 1000)
+    );
+    pollProgress.value = elapsedMilliseconds / 1000;
+    pollTime.value = `${formatDuration(remainingSeconds)} remaining`;
+
+    if (elapsedMilliseconds >= durationMilliseconds) {
+      clearInterval(pollTimer);
+      pollTimer = undefined;
+    }
+  };
+
+  updateCountdown();
+  if (durationSeconds > 0) {
+    pollTimer = setInterval(updateCountdown, 250);
+  }
+}
+
+function stopPollCountdown() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = undefined;
+  }
+  pollCountdown.hidden = true;
+  pollProgress.value = 0;
+}
+
+function formatDuration(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function setBusy(busy) {

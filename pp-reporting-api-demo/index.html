@@ -69,6 +69,15 @@
         <span>Generating report</span>
         <span class="animated-dots" aria-hidden="true"></span>
       </div>
+      <div id="poll-countdown" class="poll-countdown" hidden>
+        <div class="poll-countdown-label">
+          <span>Next status check</span>
+          <output id="poll-time">5:00 remaining</output>
+        </div>
+        <progress id="poll-progress" max="300" value="0"
+                  aria-label="Time until next report status check"></progress>
+        <p class="hint">Report generation may require more than one status check.</p>
+      </div>
       <p id="status" class="status" data-phase="ready"></p>
       <p id="error" class="error" role="alert" hidden></p>
     </section>

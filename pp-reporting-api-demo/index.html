@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <title>Copilot Studio Reporting Client</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <script>
+    if (new URLSearchParams(window.location.search).get("scoutTheme") !== "light") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  </script>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -15,13 +28,10 @@
       <p>Request and inspect a <code>BillingDetailsPerEnvironment</code> report.</p>
     </header>
 
-    <section class="notice" aria-label="Preview limitations">
-      <strong>Preview limitations:</strong> The API must be enabled for a North America home-geo tenant.
-      The signed-in user must belong to the tenant and be a Global, Power Platform, or Dynamics 365 administrator.
-    </section>
-
+    <div class="workspace">
+    <aside class="settings-sidebar" aria-labelledby="settings-title">
     <section class="card">
-      <h2>Report request</h2>
+      <h2 id="settings-title">Report settings</h2>
       <p id="user-label"></p>
       <form id="report-form">
         <label>
@@ -60,7 +70,13 @@
         </div>
       </form>
     </section>
+    <section class="notice" aria-label="Preview limitations">
+      <strong>Preview limitations:</strong> The API must be enabled for a North America home-geo tenant.
+      The signed-in user must belong to the tenant and be a Global, Power Platform, or Dynamics 365 administrator.
+    </section>
+    </aside>
 
+    <section class="reading-pane" aria-label="Report reading pane">
     <section class="card" aria-live="polite">
       <h2>Status</h2>
       <div id="generation-indicator" class="generation-indicator" role="status"
@@ -82,6 +98,12 @@
       <p id="error" class="error" role="alert" hidden></p>
     </section>
 
+    <section id="empty-results" class="card empty-results">
+      <h2>Your report will appear here</h2>
+      <p>Choose your settings on the left and request a report.
+        When it is ready, review the table and credit chart here or download the CSV archive.</p>
+    </section>
+
     <section id="results" class="card" hidden>
       <div class="results-heading">
         <div>
@@ -90,6 +112,16 @@
         </div>
         <a id="download-report" class="button" href="#">Download .csv.gz</a>
       </div>
+      <section class="credit-chart-section" aria-labelledby="credit-chart-title">
+        <h2 id="credit-chart-title">Consumed credits per report row</h2>
+        <p class="hint">Prepaid and pay-as-you-go credits are shown separately on the same scale.
+          BilledDate categories follow table order; rows are not aggregated.
+          Summary rows without a billing date use their row number.</p>
+        <p id="chart-message" role="status"></p>
+        <p class="hint">Y-axis: consumed credits</p>
+        <ol id="credit-chart" class="credit-chart" aria-label="Credits per report row"></ol>
+        <p class="credit-chart-axis">BilledDate</p>
+      </section>
       <div class="table-wrap">
         <table>
           <thead id="report-head"></thead>
@@ -97,6 +129,8 @@
         </table>
       </div>
     </section>
+    </section>
+    </div>
   </main>
 
   <script src="./config.local.js"></script>

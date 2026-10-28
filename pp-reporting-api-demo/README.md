@@ -5,6 +5,24 @@ This dependency-free localhost client requests the preview
 decompresses the returned CSV, displays it, and keeps the original `.csv.gz`
 available for download.
 
+On desktop, request settings stay in a left sidebar while status and report
+results occupy a wide reading pane on the right. On smaller screens, settings
+stack above the reading pane.
+The interface defaults to a dark portal-style theme with blue accents and subtle
+chart-bar glows. Add `?scoutTheme=light` to the local URL for a light appearance.
+
+As soon as the report is available, a vertical bar chart above the table shows
+paired prepaid and pay-as-you-go consumed credits for every report row. Both
+series share a scale. The x-axis uses regional date-only BilledDate categories,
+with row-number fallbacks for Summary reports without dates. Hover over a group
+for its row number and environment. Rows follow table order and are not
+aggregated, so dates can repeat. Wide charts scroll horizontally.
+Zero and negative adjustments are supported.
+Billing dates in the table and chart use the browser's regional date-only
+format without shifting the reported calendar day. Downloaded data is unchanged.
+If a consumption column is missing or contains invalid numbers, the client
+shows a chart-specific error and keeps the table and download available.
+
 ## Prerequisites
 
 - Node.js 20 or later.
@@ -15,9 +33,16 @@ available for download.
 
 ## Configure local defaults
 
-Copy `config.example.js` to `config.local.js` and enter the tenant ID and user
-principal name. `config.local.js` is ignored by Git. These values are display
-defaults only; the app does not perform sign-in.
+Run `.\start-reporting-client.ps1` to configure local defaults interactively.
+If `config.local.js` is absent or either setting is missing or blank, the
+launcher prompts for the missing tenant ID and/or administrator user principal
+name and saves them to `config.local.js`. Existing values are preserved.
+Invalid prompt entries are rejected and requested again.
+
+Alternatively, copy `config.example.js` to `config.local.js` and enter both
+values using double-quoted strings. `config.local.js` is ignored by Git.
+The launcher uses these settings for sign-in; the browser uses them as display
+defaults and does not perform sign-in itself.
 
 ## Authentication
 
@@ -40,6 +65,18 @@ one-time in-memory handoff, and opens the app:
 ```powershell
 .\start-reporting-client.ps1
 ```
+
+The launcher uses browser-based sign-in instead of the Windows account broker,
+without changing your global Azure CLI configuration. If sign-in stalls, cancel
+with Ctrl+C and use device-code sign-in:
+
+```powershell
+.\start-reporting-client.ps1 -UseDeviceCode
+```
+
+Follow the URL and code displayed by Azure CLI and sign in with the configured
+administrator account. Device-code sign-in must be permitted by your tenant's
+Conditional Access policies.
 
 To use a different local port:
 
@@ -66,6 +103,10 @@ npm test
 
 ## Troubleshooting
 
+- **Windows sign-in dialog hangs**: Cancel the previous launcher with Ctrl+C
+  and rerun the updated script, which uses browser sign-in. If that also stalls,
+  use `-UseDeviceCode` as described above. The script waits for authentication
+  before starting the server.
 - **401**: Get a fresh token and confirm its audience is
   `https://service.flow.microsoft.com/`.
 - **403**: Confirm the user belongs to the target tenant and has a supported

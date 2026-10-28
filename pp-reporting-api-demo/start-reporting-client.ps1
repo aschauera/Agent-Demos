@@ -1,26 +1,69 @@
 [CmdletBinding()]
 param(
     [ValidateRange(1, 65535)]
-    [int]$Port = 8080
+    [int]$Port = 8080,
+    [switch]$UseDeviceCode
 )
 
 $ErrorActionPreference = "Stop"
 $appUrl = "http://localhost:$Port"
 $configPath = Join-Path $PSScriptRoot "config.local.js"
 
-if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
-    throw "Create config.local.js from config.example.js and set tenantId and userPrincipalName."
+$localConfig = if (Test-Path -LiteralPath $configPath -PathType Leaf) {
+    Get-Content -LiteralPath $configPath -Raw
+} else {
+    "window.REPORTING_CLIENT_CONFIG = {`n};`n"
+}
+if ($localConfig -notmatch 'window\.REPORTING_CLIENT_CONFIG\s*=\s*\{') {
+    throw "config.local.js must assign window.REPORTING_CLIENT_CONFIG to an object."
 }
 
-$localConfig = Get-Content -LiteralPath $configPath -Raw
-$tenantMatch = [regex]::Match($localConfig, 'tenantId\s*:\s*"(?<value>[^"]+)"')
-$userMatch = [regex]::Match($localConfig, 'userPrincipalName\s*:\s*"(?<value>[^"]+)"')
-if (-not $tenantMatch.Success -or -not $userMatch.Success) {
-    throw "config.local.js must define tenantId and userPrincipalName using double-quoted values."
-}
+$settings = @(
+    @{ Name = "tenantId"; Prompt = "Enter your Microsoft Entra tenant ID" }
+    @{ Name = "userPrincipalName"; Prompt = "Enter your administrator user principal name" }
+)
+$configChanged = $false
+$values = @{}
+foreach ($setting in $settings) {
+    $pattern = '\b' + $setting.Name + '\s*:\s*"(?<value>[^"]*)"'
+    $match = [regex]::Match($localConfig, $pattern)
+    $value = $match.Groups["value"].Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        if (-not $match.Success -and $localConfig -match ('\b' + $setting.Name + '\s*:')) {
+            throw "config.local.js must define $($setting.Name) using a double-quoted value."
+        }
+        do {
+            $value = (Read-Host $setting.Prompt).Trim()
+            $valid = if ($setting.Name -eq "tenantId") {
+                $value -match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'
+            } else {
+                $value -match '^[^@\s]+@[^@\s]+$'
+            }
+            if (-not $valid) {
+                Write-Warning "Enter a valid $($setting.Name)."
+            }
+        } until ($valid)
 
-$tenantId = $tenantMatch.Groups["value"].Value
-$expectedUser = $userMatch.Groups["value"].Value
+        $property = "$($setting.Name): $(ConvertTo-Json -InputObject $value -Compress)"
+        if ($match.Success) {
+            $localConfig = $localConfig.Remove($match.Index, $match.Length).Insert($match.Index, $property)
+        } else {
+            $assignment = [regex]::Match($localConfig, 'window\.REPORTING_CLIENT_CONFIG\s*=\s*\{')
+            $localConfig = $localConfig.Insert(
+                $assignment.Index + $assignment.Length,
+                "`n  $property,"
+            )
+        }
+        $configChanged = $true
+    }
+    $values[$setting.Name] = $value
+}
+if ($configChanged) {
+    Set-Content -LiteralPath $configPath -Value $localConfig -Encoding UTF8
+    Write-Host "Saved local defaults to config.local.js."
+}
+$tenantId = $values["tenantId"]
+$expectedUser = $values["userPrincipalName"]
 
 if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
     throw "Azure CLI is required. Install it, then run this script again."
@@ -30,14 +73,29 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 }
 
 Write-Host "Signing in to tenant $tenantId as $expectedUser..." -ForegroundColor Cyan
-& az login `
-    --tenant $tenantId `
-    --allow-no-subscriptions `
-    --output none
-if ($LASTEXITCODE -ne 0) {
-    throw "Azure CLI sign-in failed."
+$loginArguments = @(
+    "login", "--tenant", $tenantId,
+    "--allow-no-subscriptions", "--output", "none"
+)
+if ($UseDeviceCode) {
+    $loginArguments += "--use-device-code"
+    Write-Host "Open the URL displayed by Azure CLI and enter its device code. Waiting for sign-in..."
+} else {
+    Write-Host "Complete sign-in in your browser. If it stalls, press Ctrl+C and rerun with -UseDeviceCode."
 }
 
+$previousBrokerSetting = $env:AZURE_CORE_ENABLE_BROKER_ON_WINDOWS
+try {
+    $env:AZURE_CORE_ENABLE_BROKER_ON_WINDOWS = "false"
+    & az @loginArguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Azure CLI sign-in failed. Try running this script with -UseDeviceCode."
+    }
+} finally {
+    $env:AZURE_CORE_ENABLE_BROKER_ON_WINDOWS = $previousBrokerSetting
+}
+
+Write-Host "Sign-in completed. Acquiring the Power Automate access token..." -ForegroundColor Cyan
 $accessToken = & az account get-access-token `
     --resource "https://service.flow.microsoft.com/" `
     --tenant $tenantId `

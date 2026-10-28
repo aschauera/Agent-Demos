@@ -1,4 +1,6 @@
 import { ReportingApiError, requestReport } from "./reporting-client.mjs";
+import { renderCreditChart } from "./credit-chart.mjs";
+import { formatReportDate } from "./report-date.mjs";
 
 const config = window.REPORTING_CLIENT_CONFIG ?? {};
 const form = document.querySelector("#report-form");
@@ -17,10 +19,13 @@ const pollTime = document.querySelector("#poll-time");
 const errorPanel = document.querySelector("#error");
 const userLabel = document.querySelector("#user-label");
 const resultsPanel = document.querySelector("#results");
+const emptyResultsPanel = document.querySelector("#empty-results");
 const resultSummary = document.querySelector("#result-summary");
 const tableHead = document.querySelector("#report-head");
 const tableBody = document.querySelector("#report-body");
 const downloadLink = document.querySelector("#download-report");
+const creditChart = document.querySelector("#credit-chart");
+const chartMessage = document.querySelector("#chart-message");
 
 let activeController;
 let downloadObjectUrl;
@@ -199,14 +204,21 @@ function renderResult({ archive, fileName, headers, rows }) {
   const fragment = document.createDocumentFragment();
   for (const row of rows) {
     const tableRow = document.createElement("tr");
-    for (const value of row) {
+    for (const [index, value] of row.entries()) {
       const cell = document.createElement("td");
-      cell.textContent = value;
+      cell.textContent = headers[index] === "BilledDate" ? formatReportDate(value) : value;
       tableRow.append(cell);
     }
     fragment.append(tableRow);
   }
   tableBody.replaceChildren(fragment);
+  try {
+    renderCreditChart(creditChart, headers, rows);
+    chartMessage.textContent = rows.length ? "" : "No report rows to chart.";
+  } catch (error) {
+    creditChart.replaceChildren();
+    chartMessage.textContent = `Chart unavailable: ${error.message}`;
+  }
 
   revokeDownloadUrl();
   downloadObjectUrl = URL.createObjectURL(archive);
@@ -214,13 +226,17 @@ function renderResult({ archive, fileName, headers, rows }) {
   downloadLink.download = fileName;
   resultSummary.textContent = `${rows.length} row${rows.length === 1 ? "" : "s"} in ${fileName}`;
   resultsPanel.hidden = false;
+  emptyResultsPanel.hidden = true;
 }
 
 function clearResults() {
   revokeDownloadUrl();
   tableHead.replaceChildren();
   tableBody.replaceChildren();
+  creditChart.replaceChildren();
+  chartMessage.textContent = "";
   resultsPanel.hidden = true;
+  emptyResultsPanel.hidden = false;
 }
 
 function revokeDownloadUrl() {

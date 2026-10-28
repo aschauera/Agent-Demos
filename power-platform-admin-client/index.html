@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#090c14">
+    <title>The Bridge</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/config.local.js"></script>
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#dashboard" aria-label="The Bridge home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 23h22l-3 5H9zM8 23V12h16v11M6 12l3-5h14l3 5zM16 7V3m0 1h5"/>
+              <path d="M11 15h3v4h-3zm7 0h3v4h-3zM3 30c2-2 4 2 6 0s4 2 6 0 4 2 6 0 4 2 8 0"/>
+            </svg>
+          </span>
+          <span class="brand-copy">
+            <strong>The Bridge</strong>
+            <small>Managed Platform Command Center</small>
+          </span>
+        </a>
+        <div class="nav-caption">WORKSPACE</div>
+        <nav id="navigation" aria-label="Power Platform API sections"></nav>
+        <div class="sidebar-bottom">
+          <label for="session-mode">Data source</label>
+          <select id="session-mode" aria-describedby="session-description">
+            <option value="mock">Local Session with mock data</option>
+            <option value="live" selected>Live tenant</option>
+          </select>
+          <span id="session-description">Live tenant selected; sign in to connect.</span>
+          <a href="https://learn.microsoft.com/en-us/rest/api/power-platform/" target="_blank" rel="noreferrer">API reference ↗</a>
+        </div>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Tenant workspace</span><span class="crumb-dot">/</span><strong id="crumb">Overview</strong></div>
+          <div class="topbar-actions">
+            <span id="connection-status" class="status-pill" role="status" aria-live="polite"><span class="status-dot"></span>Not connected</span>
+            <button id="connect-button" class="button button-primary" type="button">Connect tenant</button>
+            <button id="disconnect-button" class="button button-quiet hidden" type="button">Disconnect</button>
+          </div>
+        </header>
+        <div id="module-loading" class="module-loading hidden" role="status" aria-live="polite" aria-atomic="true">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <div><strong>Loading data</strong><span id="module-loading-message"></span></div>
+          <span class="loading-track" aria-hidden="true"></span>
+        </div>
+        <section id="main-content" class="content" tabindex="-1"></section>
+      </main>
+    </div>
+
+    <dialog id="connect-dialog" class="dialog">
+      <form method="dialog" id="connect-form">
+        <button class="dialog-close" value="cancel" aria-label="Close dialog">×</button>
+        <div class="eyebrow">DELEGATED SIGN-IN</div>
+        <h2>Connect to your tenant</h2>
+        <p class="muted">Sign in with Microsoft Entra. The client uses authorization code with PKCE and keeps the access token in memory only.</p>
+        <label for="tenant-id">Tenant ID</label>
+        <input id="tenant-id" name="tenantId" autocomplete="off" spellcheck="false" required>
+        <label for="client-id">Public client application ID</label>
+        <input id="client-id" name="clientId" autocomplete="off" spellcheck="false" required>
+        <label class="remember-connection"><input id="remember-connection" type="checkbox"> Save tenant and app IDs in this browser</label>
+        <p class="form-hint">Local development only. IDs stay in browser storage, outside the repository. Tokens are never saved. Uncheck before signing in to remove saved browser IDs.</p>
+        <div class="request-actions">
+          <button id="save-connection" type="button" class="button button-quiet button-small">Save locally</button>
+          <button id="forget-connection" type="button" class="button button-quiet button-small">Forget saved IDs</button>
+        </div>
+        <p class="form-hint">Configure this app registration as a single-page application with this local URL as its redirect URI. Grant only the delegated Power Platform API permissions you need.</p>
+        <div id="connect-error" class="inline-error hidden" role="alert"></div>
+        <div class="dialog-actions">
+          <button class="button button-quiet" value="cancel">Cancel</button>
+          <button id="sign-in-button" class="button button-primary" type="button">Continue to sign in</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="detail-dialog" class="dialog detail-dialog">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="Close dialog">×</button>
+        <div class="eyebrow">RESOURCE DETAIL</div>
+        <h2 id="detail-title">Resource</h2>
+        <pre id="detail-content" class="json-view"></pre>
+        <div class="dialog-actions"><button class="button button-quiet" value="cancel">Close</button></div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  </body>
+</html>

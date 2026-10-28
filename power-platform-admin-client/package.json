@@ -1,0 +1,11 @@
+{
+  "name": "power-platform-admin-client",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "powershell -NoProfile -File .\\start-client.ps1",
+    "start:foreground": "node server.mjs",
+    "test": "node --test",
+    "refresh-catalog": "powershell -NoProfile -File .\\refresh-api-catalog.ps1"
+  }
+}

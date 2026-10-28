@@ -8,6 +8,51 @@ export function connectionPresentation(mode, token, expiresAt, now = Date.now())
   };
 }
 
+const MOCK_OWNERS = ["0f1e2d3c-1111-4aaa-8bbb-000000000001", "0f1e2d3c-2222-4aaa-8bbb-000000000002", "0f1e2d3c-3333-4aaa-8bbb-000000000003"];
+// [type, count, environmentId, location, owner index]
+const MOCK_INVENTORY = [
+  ["microsoft.powerplatform/environments", 1, "", "unitedstates", -1],
+  ["microsoft.powerplatform/environments", 1, "", "europe", -1],
+  ["microsoft.powerapps/canvasapps", 6, "mock-production", "unitedstates", 0],
+  ["microsoft.powerapps/modeldrivenapps", 3, "mock-production", "unitedstates", 1],
+  ["microsoft.powerapps/codeapps", 2, "mock-sandbox", "europe", 2],
+  ["microsoft.powerautomate/cloudflows", 9, "mock-production", "unitedstates", 1],
+  ["microsoft.powerautomate/agentflows", 2, "mock-sandbox", "europe", 0],
+  ["microsoft.copilotstudio/agents", 2, "mock-production", "unitedstates", 0],
+  ["microsoft.copilotstudio/agents", 2, "mock-sandbox", "europe", 2],
+  ["microsoft.powerplatformconnector/connectors", 3, "mock-sandbox", "europe", 1]
+].flatMap(([type, count, environmentId, location, owner]) => Array.from({ length: count }, () => ({
+  type, location, properties: { environmentId, ownerId: MOCK_OWNERS[owner] ?? "" }
+})));
+
+function mockAggregate(clauses) {
+  if (!Array.isArray(clauses) || !clauses.some((clause) => clause?.$type === "summarize")) {
+    throw new Error("No sample data is available for this Resource Query.");
+  }
+  let rows = MOCK_INVENTORY.map((row) => ({ ...row }));
+  for (const clause of clauses) {
+    const property = clause.$type === "extend" && /^tostring\(properties\.(\w+)\)$/.exec(clause.Expression);
+    const summarize = clause.SummarizeClauseExpression;
+    if (property) {
+      rows = rows.map((row) => ({ ...row, [clause.FieldName]: String(row.properties[property[1]] ?? "") }));
+    } else if (clause.$type === "where" && clause.Operator === "!=" && clause.Values?.[0] === "''") {
+      rows = rows.filter((row) => row[clause.FieldName]);
+    } else if (clause.$type === "summarize" && summarize?.OperatorName === "count" && summarize.FieldList?.length === 1) {
+      const counts = new Map();
+      for (const row of rows) counts.set(row[summarize.FieldList[0]], (counts.get(row[summarize.FieldList[0]]) || 0) + 1);
+      rows = [...counts].map(([key, count]) => ({ [summarize.FieldList[0]]: key, [summarize.OperatorFieldName]: count }));
+    } else if (clause.$type === "orderby") {
+      const [[field, direction]] = Object.entries(clause.FieldNamesAscDesc);
+      rows.sort((a, b) => (direction === "desc" ? b[field] - a[field] : a[field] - b[field]));
+    } else if (clause.$type === "take") {
+      rows = rows.slice(0, clause.TakeCount);
+    } else {
+      throw new Error("No sample data is available for this Resource Query.");
+    }
+  }
+  return rows;
+}
+
 export function createMockFetch() {
   return async (input, { method = "GET", signal, body } = {}) => {
     signal?.throwIfAborted();
@@ -17,10 +62,14 @@ export function createMockFetch() {
     });
     if (method === "POST" && url.pathname === "/resourcequery/resources/query") {
       const query = JSON.parse(body);
-      if (query.TableName !== "PowerPlatformResources" || JSON.stringify(query.Clauses) !== JSON.stringify([
+      if (query.TableName !== "PowerPlatformResources") throw new Error("No sample data is available for this Resource Query.");
+      if (JSON.stringify(query.Clauses) !== JSON.stringify([
         { $type: "where", FieldName: "type", Operator: "in~", Values: ["'microsoft.copilotstudio/agents'"] },
         { $type: "orderby", FieldNamesAscDesc: { id: "asc" } }
-      ])) throw new Error("No sample data is available for this Resource Query.");
+      ])) {
+        const rows = mockAggregate(query.Clauses);
+        return json({ data: rows, count: rows.length, totalRecords: rows.length, resultTruncated: 1 });
+      }
       return json({ data: [
         { id: "mock-github", name: "sample-github-agent", type: "microsoft.copilotstudio/agents",
           properties: { displayName: "Sample GitHub Copilot agent", environmentId: "mock-production", harness: "GitHub Copilot" } },
@@ -46,8 +95,8 @@ export function createMockFetch() {
     }
     if (url.pathname === "/environmentmanagement/environments") {
       return json({ value: [
-        { id: "mock-production", displayName: "Sample Production", geo: "unitedstates", state: "Ready" },
-        { id: "mock-sandbox", displayName: "Sample Sandbox", geo: "europe", state: "Ready" }
+        { id: "mock-production", displayName: "Sample Production", geo: "unitedstates", state: "Ready", type: "Production", protectionLevel: "Standard" },
+        { id: "mock-sandbox", displayName: "Sample Sandbox", geo: "europe", state: "Ready", type: "Sandbox", protectionLevel: "Basic" }
       ] });
     }
     if (/^\/powerapps\/environments\/[^/]+\/apps(?:\/[^/]+)?$/.test(url.pathname)) {

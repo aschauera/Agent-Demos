@@ -53,7 +53,7 @@ test("serves the shared reporting module without exposing reporting configuratio
   assert.equal((await fetch(`${baseUrl}/pp-reporting-api-demo/config.local.js`)).status, 404);
   assert.equal((await fetch(`${baseUrl}/session-token`, { method: "POST" })).status, 405);
   assert.equal((await fetch(`${baseUrl}/consumption.js`)).status, 200);
-  for (const module of ["app-management.js", "app-management-api.js", "application-inventory.js", "session-mode.js", "module-summary.js", "local-settings.js", "agent-details.js"]) {
+  for (const module of ["app-management.js", "app-management-api.js", "application-inventory.js", "session-mode.js", "module-summary.js", "local-settings.js", "agent-details.js", "tenant-overview.js", "charts.js"]) {
     const asset = await fetch(`${baseUrl}/${module}`);
     assert.equal(asset.status, 200);
     assert.match(asset.headers.get("content-type"), /javascript/);

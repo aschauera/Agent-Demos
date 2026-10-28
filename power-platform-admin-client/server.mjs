@@ -18,6 +18,8 @@ const allowedFiles = new Set([
   "module-summary.js",
   "local-settings.js",
   "agent-details.js",
+  "tenant-overview.js",
+  "charts.js",
   "pp-reporting-api-demo/reporting-client.mjs",
   "auth.js",
   "api-client.js",

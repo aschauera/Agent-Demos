@@ -60,7 +60,7 @@ Mock mode provides labeled sample environments, application packages/install sta
 1. Open the running client and select **Connect tenant**.
 2. Enter the **Directory (tenant) ID** and **Application (client) ID** from your app registration.
 3. Select **Continue to sign in** and authenticate with a user in that tenant. Complete any consent or multifactor authentication required by your organization.
-4. After returning to the client, select **Load environment overview** for an initial read-only API call.
+4. After returning to the client, the **Tenant overview** loads automatically (see below).
 5. Open an API section, expand a resource group, and select **Use** beside an operation to prefill its documented method, route, and API version. Open its Microsoft Learn reference to check permissions and body schema, replace any `{parameter}` placeholders, and enter a JSON body when required.
 6. Review the response table or JSON, select rows for details, and use **Load next page** where available. Counts describe loaded data, not necessarily tenant-wide totals.
 
@@ -73,6 +73,19 @@ Select **Disconnect** to clear the local session. Tokens are held only in memory
 If sign-in fails, verify the SPA redirect URI and tenant/client IDs. For API access errors, check the operation's delegated permissions, admin consent, and your user's service-side role. The client surfaces HTTP status and API errors rather than substituting empty results.
 
 All module pages show a sticky **Loading data** banner above the content while summaries, inventories, API operations, or consumption reports are loading. It tracks concurrent requests for the current page, marks the content busy for assistive technology, and respects reduced-motion preferences.
+
+### Tenant overview
+
+When connected, the dashboard shows tenant-wide aggregate charts instead of loaded-row counts. Totals are computed server-side by the [Power Platform inventory Resource Query API](https://learn.microsoft.com/en-us/power-platform/admin/power-platform-inventory-api) (`POST /resourcequery/resources/query`) using `summarize count()` queries, so the browser never pages through every resource:
+
+- **KPI tiles**: total resources, environments, apps (canvas, model-driven, code, other), flows (cloud and agent flows), agents and connectors, from one count-by-`type` query. Each tile links to its module.
+- **Top 10 environments by resources**: count by `properties.environmentId`, labeled with environment display names (the ID is in the tooltip).
+- **Resources by region**: count by `location`.
+- **Agents by harness**: reuses the Copilot Studio inventory summary (GitHub Copilot, Standard, Copilot Chat, Unknown).
+- **Environments by type and managed state**: from the Environments API (`type` and `protectionLevel`). `Standard` protection is shown as **Managed** and `Basic` as **Not managed**; this mapping follows the Managed Environments convention.
+- **Top 10 owners**: count by `properties.ownerId` (Entra object IDs, copyable).
+
+Chart rows link to the related module. Each chart loads and fails independently; **Refresh overview** reloads everything and **Cancel** aborts. Add the delegated `ResourceQuery.Resources.Read` permission (plus `EnvironmentManagement.Environments.Read`). The inventory is eventually consistent (it can lag by up to about 20 minutes) and excludes classic V1 agents. Mock mode computes the same aggregates from a small sample inventory.
 
 ### App Management workspace
 

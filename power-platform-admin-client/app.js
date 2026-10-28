@@ -1,6 +1,5 @@
 import {
   API_REFERENCE,
-  API_SECTIONS,
   NAVIGATION_MODULES,
   APPLICATION_MODULE,
   ENVIRONMENTS_LIST,
@@ -23,6 +22,8 @@ import { appView, createInventoryState, inventoryMarkup, loadInventory } from ".
 import { loadApplicationSummary, loadCopilotSummary, loadModuleSummary } from "./module-summary.js";
 import { connectionIds, readLocalConnection, saveLocalConnection, forgetLocalConnection } from "./local-settings.js";
 import { agentKey, agentDetailsMarkup, agentOperationFields, agentOperationRequest } from "./agent-details.js";
+import { KPI_BUCKETS, loadTenantOverview } from "./tenant-overview.js";
+import { barChart, donutChart } from "./charts.js";
 
 let disposeConsumption;
 let disposeAppManagement;
@@ -34,8 +35,6 @@ const state = {
   token: undefined,
   tokenExpiresAt: undefined,
   currentSectionId: undefined,
-  environmentRows: [],
-  environmentNextLink: undefined,
   lastResult: undefined,
   lastError: undefined,
   requestLog: [],
@@ -180,78 +179,124 @@ function copilotTiles(data) {
     </div>`).join("")}</div>`;
 }
 
-function renderEnvironmentRows() {
-  if (!state.environmentRows.length) {
-    return `<div class="empty-state"><strong>No environment data loaded</strong>Connect to the tenant and load the documented environment list endpoint.</div>`;
+const DASHBOARD_SUMMARY = "dashboard";
+const RESOURCE_QUERY_HINT = "Requires delegated ResourceQuery.Resources.Read and service-side inventory access.";
+
+function kpiTile(label, value, note, href, accent = "cyan") {
+  const inner = `<div class="stat-label">${escapeHtml(label)}</div><div class="stat-value accent-${accent}">${escapeHtml(value)}</div><div class="stat-note">${escapeHtml(note)}</div>`;
+  return href ? `<a class="stat-card kpi-link" href="${escapeHtml(href)}">${inner}</a>` : `<div class="stat-card">${inner}</div>`;
+}
+
+function chartPanel(title, chart, body, { inventory = true, wide = false } = {}) {
+  let markup;
+  if (!chart || chart.status === "pending") markup = '<p class="chart-empty">Waiting…</p>';
+  else if (chart.status === "loading") markup = '<p class="chart-empty" role="status"><span class="chart-spinner" aria-hidden="true"></span>Loading…</p>';
+  else if (chart.status === "error") markup = `<div class="request-error" role="alert">${escapeHtml(chart.error)}</div>${inventory ? `<p class="form-hint">${RESOURCE_QUERY_HINT}</p>` : ""}`;
+  else markup = body(chart.data);
+  return `<section class="panel chart-panel${wide ? " chart-wide" : ""}"><div class="panel-title"><h3>${escapeHtml(title)}</h3></div>${markup}</section>`;
+}
+
+const shortId = (id) => (id.length > 18 ? `${id.slice(0, 8)}…${id.slice(-6)}` : id);
+
+function renderTenantOverview() {
+  const container = content.querySelector("#tenant-overview");
+  if (!container) return;
+  const entry = state.summaries.get(DASHBOARD_SUMMARY);
+  const charts = entry?.data || {};
+  const kpis = charts.types?.status === "done" ? charts.types.data.kpis : undefined;
+  const kpiNote = !entry ? "Connect to load" : kpis ? "Tenant inventory" : charts.types?.status === "error" ? "Unavailable" : "Loading…";
+  const value = (id) => (kpis ? kpis[id].toLocaleString() : "—");
+  let markup = `<div class="stats-grid kpi-grid">
+    ${kpiTile("Total resources", value("total"), kpiNote, undefined, "violet")}
+    ${KPI_BUCKETS.map((bucket) => kpiTile(bucket.label, value(bucket.id), kpiNote, `#section/${bucket.sectionId}`)).join("")}
+  </div>`;
+  if (!entry) {
+    container.innerHTML = `${markup}<p class="notice">Connect to the tenant to load the tenant overview automatically.</p>`;
+    return;
   }
-  const rows = state.environmentRows.slice(0, 7).map((environment, index) => `
-    <div class="environment-row" data-environment-index="${index}" tabindex="0" role="button">
-      <div>
-        <strong>${escapeHtml(environment?.displayName || "Unnamed environment")}</strong>
-        <small>${escapeHtml(environment?.id || "No ID")} · ${escapeHtml(environment?.geo || "Geo unavailable")}</small>
-      </div>
-      <span class="state-tag">${escapeHtml(environment?.state || "Unknown")}</span>
-    </div>`).join("");
-  return `<div class="environment-list">${rows}</div>`;
+  const names = new Map(charts.environmentList?.data?.names || []);
+  const environmentHref = "#section/environment-management";
+  markup += `<div class="chart-grid">
+    ${chartPanel("Top environments by resources", charts.environments, (rows) => barChart({
+      label: "Top 10 environments by resource count",
+      items: rows.map(({ key, count }) => {
+        const name = names.get(key.toLowerCase());
+        return { label: name || shortId(key), value: count, href: environmentHref, tooltip: `${name ? `${name} · ` : ""}${key}: ${count}` };
+      })
+    }))}
+    ${chartPanel("Resources by region", charts.regions, (rows) => donutChart({
+      label: "Resources by region", centerLabel: "resources",
+      items: rows.map(({ key, count }) => ({ label: key, value: count }))
+    }))}
+    ${chartPanel("Agents by harness", charts.harness, (data) => donutChart({
+      label: "Copilot Studio agents by harness", centerLabel: "agents", emptyText: "No agents returned by the inventory.",
+      items: [["GitHub Copilot", data.github, 0], ["Standard", data.standard, 1], ["Copilot Chat", data.chat, 2], ["Unknown", data.unknown, 5]]
+        .map(([label, count, color]) => ({ label, value: count, color, href: "#section/copilot-studio" }))
+    }))}
+    ${chartPanel("Environments by type", charts.environmentList, (data) => `<div class="chart-pair">${barChart({
+      label: "Environments by type", emptyText: "No accessible environments.",
+      items: data.byType.map(({ key, count }) => ({ label: key, value: count, href: environmentHref }))
+    })}${donutChart({
+      label: "Managed Environments", centerLabel: "environments", emptyText: "No accessible environments.",
+      items: data.byProtection.map(({ key, count }) => ({ label: key, value: count, href: environmentHref,
+        color: { Managed: 1, "Not managed": 3, Unknown: 5 }[key] }))
+    })}</div>`, { inventory: false })}
+    ${chartPanel("Top owners by items", charts.owners, (rows) => barChart({
+      label: "Top 10 owners by item count", emptyText: "No owner metadata returned.",
+      items: rows.map(({ key, count }) => ({ label: key, value: count, copy: key, tooltip: `Entra object ID ${key}: ${count}` }))
+    }), { wide: true })}
+  </div>`;
+  const failed = Object.values(charts).some((chart) => chart.status === "error");
+  markup += `<p class="form-hint">Inventory aggregates are computed server-side by the Resource Query API (summarize count). Inventory changes typically appear within 20 minutes; V1 agents are not tracked. Owners are Microsoft Entra object IDs.</p>`;
+  if (entry.error) markup += `<div class="request-error" role="alert">${escapeHtml(entry.error)}</div>`;
+  markup += `<p class="form-hint" role="status">${entry.status === "loading" ? "Loading tenant overview…" : entry.error || failed ? "Overview incomplete; unavailable charts are marked above. Refresh to retry." : "Tenant overview loaded. Refresh for current data."}</p>
+    <div class="overview-actions">
+      <button id="refresh-tenant-overview" class="button button-quiet" ${entry.status === "loading" ? "disabled" : ""}>Refresh overview</button>
+      ${entry.status === "loading" ? '<button id="cancel-tenant-overview" class="button button-danger">Cancel</button>' : ""}
+    </div>`;
+  container.innerHTML = markup;
+  container.querySelector("#refresh-tenant-overview").addEventListener("click", () => {
+    state.summaries.delete(DASHBOARD_SUMMARY);
+    ensureTenantOverview();
+  });
+  container.querySelector("#cancel-tenant-overview")?.addEventListener("click", () => entry.controller.abort());
+  container.querySelectorAll("[data-copy]").forEach((button) => button.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(button.dataset.copy);
+      showToast("Owner ID copied.");
+    } catch {
+      showToast("Clipboard unavailable; select the ID to copy it manually.");
+    }
+  }));
+}
+
+function ensureTenantOverview() {
+  if (!sessionToken() || state.summaries.has(DASHBOARD_SUMMARY)) { renderTenantOverview(); return; }
+  const entries = state.summaries;
+  const entry = { status: "loading", controller: new AbortController() };
+  entries.set(DASHBOARD_SUMMARY, entry);
+  const finishLoading = beginLoading("Loading tenant overview…", undefined);
+  const copilot = entries.get("copilot-studio");
+  const copilotSummary = copilot?.status === "done" && !copilot.error ? copilot.data : undefined;
+  const update = () => { if (state.summaries === entries && !state.currentSectionId) renderTenantOverview(); };
+  renderTenantOverview();
+  void loadTenantOverview(sessionOptions({ signal: entry.controller.signal }), (data) => { entry.data = data; update(); }, { copilotSummary })
+    .then((data) => { entry.data = data; }, (error) => {
+      entry.error = error.name === "AbortError" ? "Overview cancelled. Refresh to retry." : getApiErrorDescription(error);
+    }).finally(() => { entry.status = "done"; finishLoading(); update(); });
 }
 
 function renderDashboard() {
-  const operationCount = API_SECTIONS.reduce((count, section) => count + section.operationCount, 0);
-  const loadedCount = state.environmentRows.length;
-  const envCount = loadedCount ? String(loadedCount) : "—";
-  const envNote = state.environmentNextLink
-    ? "Loaded records · more pages available"
-    : loadedCount ? "Loaded records in this session" : "Load from the Environments API";
   content.innerHTML = `
     <div class="hero">
-      <div class="hero-row">
-        <div>
-          <div class="hero-tag">POWER PLATFORM · TENANT MANAGEMENT</div>
-          <h1>One workspace for your platform.</h1>
-          <p>Explore the documented Power Platform API namespaces, review tenant resources, and run supported management operations from a local-only console.</p>
-        </div>
-        <button id="load-environments" class="button button-primary" ${sessionToken() ? "" : "disabled"}>Load environment overview</button>
-      </div>
+      <div class="hero-tag">POWER PLATFORM · TENANT MANAGEMENT</div>
+      <h1>One workspace for your platform.</h1>
+      <p>Tenant-wide totals and resource distribution from the Power Platform inventory, with drilldown into each management module.</p>
     </div>
-    <div class="stats-grid">
-      ${statCard("Environments loaded", envCount, envNote, "cyan")}
-      ${statCard("Management modules", String(NAVIGATION_MODULES.length), `${API_SECTIONS.length} documented API sections`, "violet")}
-      ${statCard("Documented operations", String(operationCount), "Indexed from the official Learn TOC", "green")}
-      ${statCard("Requests this session", String(state.requestLog.length), "Request metadata only; no response data saved", "green")}
-    </div>
-    <div class="dashboard-grid">
-      <section class="panel">
-        <div class="panel-title"><h3>Environment overview</h3><span>${loadedCount ? `${loadedCount} loaded` : "API-backed"}</span></div>
-        ${state.lastError?.sectionId === "environment-management" ? `<div class="request-error">${escapeHtml(state.lastError.message)}</div>` : ""}
-        ${renderEnvironmentRows()}
-        ${state.environmentNextLink ? '<div class="next-page-row"><button id="load-next-environments" class="button button-quiet button-small">Load next page</button></div>' : ""}
-      </section>
-      <section class="panel">
-        <div class="panel-title"><h3>Connection and permissions</h3><span>Delegated user context</span></div>
-        <div class="notice">The Power Platform API uses Microsoft Entra delegated permissions. Configure an app registration with only the permissions your enabled operations require. The client never stores an app secret or access token.</div>
-        <p class="form-hint tenant-config-hint">Tenant: <span class="mono">${escapeHtml(config.tenantId || "not configured")}</span></p>
-        <p class="form-hint">Redirect URI: <span class="mono">${escapeHtml(`${window.location.origin}/`)}</span></p>
-        <a class="button button-quiet button-small" href="${PERMISSIONS_REFERENCE}" target="_blank" rel="noreferrer">Review permission reference ↗</a>
-      </section>
-    </div>
+    <section id="tenant-overview" aria-label="Tenant overview"></section>
     <div class="section-heading"><div><h2>Management modules</h2><p>Documented APIs grouped by management task.</p></div><a class="button button-quiet button-small" href="${API_REFERENCE}" target="_blank" rel="noreferrer">Microsoft Learn ↗</a></div>
     <div class="section-grid">${NAVIGATION_MODULES.map((section, index) => sectionCard(section, index)).join("")}</div>`;
-
-  document.querySelector("#load-environments")?.addEventListener("click", loadEnvironments);
-  document.querySelector("#load-next-environments")?.addEventListener("click", loadNextEnvironments);
-  content.querySelectorAll("[data-environment-index]").forEach((row) => {
-    const open = () => showDetail(
-      state.environmentRows[Number(row.dataset.environmentIndex)]?.displayName || "Environment",
-      state.environmentRows[Number(row.dataset.environmentIndex)]
-    );
-    row.addEventListener("click", open);
-    row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        open();
-      }
-    });
-  });
+  ensureTenantOverview();
 }
 
 function sectionCard(section, index) {
@@ -871,69 +916,6 @@ function recordRequest(section, response, error) {
   }
 }
 
-async function loadEnvironments() {
-  const section = getSectionById("environment-management");
-  if (!sessionToken()) {
-    showToast("Connect with a delegated Power Platform API token first.");
-    return;
-  }
-  const button = document.querySelector("#load-environments");
-  button.disabled = true;
-  button.textContent = "Loading…";
-  const controller = new AbortController();
-  state.activeController = controller;
-  try {
-    const response = await requestPowerPlatformApi({
-      section,
-      path: ENVIRONMENTS_LIST.path,
-      apiVersion: ENVIRONMENTS_LIST.apiVersion,
-      method: ENVIRONMENTS_LIST.method,
-      accessToken: state.token,
-      signal: controller.signal
-    });
-    state.environmentRows = extractRows(response.data);
-    state.environmentNextLink = extractNextLink(response.data);
-    state.lastError = undefined;
-    recordRequest(section, response);
-    showToast(`Loaded ${state.environmentRows.length} environment record(s).`);
-  } catch (error) {
-    state.lastError = { sectionId: section.id, message: getApiErrorDescription(error) };
-    recordRequest(section, undefined, error);
-    showToast(state.lastError.message);
-  } finally {
-    state.activeController = undefined;
-    render();
-  }
-}
-
-async function loadNextEnvironments() {
-  if (!sessionToken() || !state.environmentNextLink) {
-    return;
-  }
-  const section = getSectionById("environment-management");
-  const controller = new AbortController();
-  state.activeController = controller;
-  try {
-    const response = await requestNextPage({
-      section,
-      nextLink: state.environmentNextLink,
-      accessToken: state.token,
-      signal: controller.signal
-    });
-    state.environmentRows.push(...extractRows(response.data));
-    state.environmentNextLink = extractNextLink(response.data);
-    recordRequest(section, response);
-    showToast(`Loaded ${state.environmentRows.length} environment record(s) so far.`);
-  } catch (error) {
-    state.lastError = { sectionId: section.id, message: getApiErrorDescription(error) };
-    recordRequest(section, undefined, error);
-    showToast(state.lastError.message);
-  } finally {
-    state.activeController = undefined;
-    render();
-  }
-}
-
 async function loadNextSectionPage(section) {
   const nextLink = extractNextLink(state.lastResult?.response?.data);
   if (!sessionToken() || !nextLink) {
@@ -1137,8 +1119,6 @@ function disconnect() {
   state.appManagement = createAppManagementState();
   state.token = undefined;
   state.tokenExpiresAt = undefined;
-  state.environmentRows = [];
-  state.environmentNextLink = undefined;
   state.lastResult = undefined;
   state.lastError = undefined;
   state.requestLog = [];

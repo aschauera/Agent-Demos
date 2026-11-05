@@ -1,0 +1,19 @@
+{
+  "crm_base_url": "https://crm.internal.example/REPLACE_WITH_GENERATED_REST_SERVICE/",
+  "login_path": "Login",
+  "login_method": "GET",
+  "login_parameters": {
+    "username": "username",
+    "password": "password",
+    "language_id": "languageId"
+  },
+  "language_id": 1,
+  "session_check_path": "IsLoggedIn",
+  "session_result_field": null,
+  "logout_path": "Logout",
+  "timeout_seconds": 20,
+  "ca_bundle": null,
+  "operations": {
+    "QueryCompany": "QueryCompany"
+  }
+}

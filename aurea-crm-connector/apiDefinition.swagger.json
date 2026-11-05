@@ -1,0 +1,142 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Aurea CRM 2017 On-premises",
+    "version": "1.0.0",
+    "description": "Connect to installation-specific Aurea CRM.webservices REST operations through an on-premises session adapter and the standard on-premises data gateway. Configure the adapter against the actual generated service contract before use."
+  },
+  "host": "aurea-connector.internal.example:8443",
+  "basePath": "/api",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic",
+      "description": "Dedicated adapter username and password, not the CRM service account credentials."
+    }
+  },
+  "security": [{"basicAuth": []}],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "GetAdapterHealth",
+        "summary": "Check adapter connectivity",
+        "x-ms-summary": "Check adapter connectivity",
+        "description": "Checks authenticated access to the adapter. Does not log in to CRM or check CRM availability.",
+        "responses": {
+          "200": {
+            "description": "The adapter is reachable.",
+            "schema": {"$ref": "#/definitions/HealthResponse"}
+          },
+          "401": {
+            "description": "Invalid adapter credentials.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          }
+        }
+      }
+    },
+    "/operations/{operationName}": {
+      "post": {
+        "operationId": "InvokeCrmOperation",
+        "summary": "Invoke a configured CRM operation",
+        "x-ms-summary": "Invoke a CRM operation",
+        "description": "Logs in, verifies the session, forwards a JSON object to an allowlisted generated REST method, and logs out. Uses the adapter's CRM service account. No automatic retries or assumed CRM field names. Parse resultJson in your flow using a schema from your own CRM service.",
+        "parameters": [
+          {
+            "name": "operationName",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,79}$",
+            "description": "An exact operation key from the adapter configuration, for example QueryCompany only if that method was generated.",
+            "x-ms-summary": "Configured operation name"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {"$ref": "#/definitions/OperationRequest"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CRM returned a JSON response. CRM business errors inside successful responses remain in resultJson.",
+            "schema": {"$ref": "#/definitions/OperationResponse"}
+          },
+          "400": {
+            "description": "Invalid JSON object payload or request.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          },
+          "401": {
+            "description": "Invalid adapter credentials.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          },
+          "404": {
+            "description": "Operation is not allowlisted.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          },
+          "413": {
+            "description": "Request payload exceeds the adapter limit.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          },
+          "502": {
+            "description": "CRM authentication, transport, response, or session cleanup failed. Do not blindly retry writes: CRM may have committed the operation.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          },
+          "504": {
+            "description": "CRM timed out. A write may have committed; inspect CRM before retrying.",
+            "schema": {"$ref": "#/definitions/ErrorResponse"}
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "HealthResponse": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["ok"]}
+      }
+    },
+    "OperationRequest": {
+      "type": "object",
+      "required": ["payloadJson"],
+      "additionalProperties": false,
+      "properties": {
+        "payloadJson": {
+          "type": "string",
+          "minLength": 2,
+          "description": "A JSON object matching the installed generated REST method, including its WCF parameter wrapper when required. Do not put CRM credentials here.",
+          "x-ms-summary": "CRM request JSON"
+        }
+      }
+    },
+    "OperationResponse": {
+      "type": "object",
+      "required": ["resultJson"],
+      "properties": {
+        "resultJson": {
+          "type": "string",
+          "description": "The complete CRM JSON response, preserving WCF wrappers and CRM business errors.",
+          "x-ms-summary": "CRM result JSON"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

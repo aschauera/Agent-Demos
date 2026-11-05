@@ -17,6 +17,7 @@ Demonstrations and samples for Power Platform and Azure-based agents and autonom
 
 - **[demowebservices/MockContractWebService](./demowebservices/MockContractWebService/)** - Mock web service for contract operations
 - **[Custom WebService Agent](./Custom%20WebService%20Agent/)** - Custom agent for web service integration
+- **[aurea-crm-connector](./aurea-crm-connector/)** - Configurable Power Platform connector and on-premises session adapter for generated Aurea CRM REST services
 
 ## 🚀 Getting Started
 

@@ -12,7 +12,9 @@ export const API_SECTIONS = documentedSections.map((section) => section.id === "
         title: "Finance and Operations",
         description: "Manage Finance and Operations resources through the documented Dynamics API operations."
       }
-    : section);
+    : section.id === "resource-query"
+      ? { ...section, title: "My Queries" }
+      : section);
 
 export function getSectionById(id) {
   return API_SECTIONS.find((section) => section.id === id);
@@ -32,6 +34,7 @@ export const NAVIGATION_MODULES = [
   groupedModules[0], APPLICATION_MODULE,
   ...groupedModules.slice(1).filter((section) => section !== APPLICATION_MODULE)
 ];
+export const START_PAGE_MODULES = ["resource-query", "licensing"].map(getSectionById);
 
 export {
   ALL_PERMISSIONS,

@@ -1,6 +1,7 @@
 import { ENVIRONMENTS_LIST, getSectionById } from "./api-catalog.js";
 import { getApiErrorDescription, requestPowerPlatformApi } from "./api-client.js";
 import { collectPages, loadCopilotSummary } from "./module-summary.js";
+import { resolveOwnerNames } from "./owner-names.js";
 
 export const COUNT_FIELD = "resourceCount";
 
@@ -12,10 +13,25 @@ const byCountDesc = { $type: "orderby", FieldNamesAscDesc: { [COUNT_FIELD]: "des
 const extendProperty = (field) => ({ $type: "extend", FieldName: field, Expression: `tostring(properties.${field})` });
 const notEmpty = (field) => ({ $type: "where", FieldName: field, Operator: "!=", Values: ["''"] });
 
-// Mirrors Microsoft's documented inventory sample queries (counts by type, environment, region, owner).
+// Mirrors Microsoft's documented inventory queries and environment-name join.
 export const OVERVIEW_QUERIES = {
   types: [countBy("type"), byCountDesc],
-  environments: [extendProperty("environmentId"), notEmpty("environmentId"), countBy("environmentId"), byCountDesc, { $type: "take", TakeCount: 10 }],
+  environments: [
+    { $type: "extend", FieldName: "environmentId", Expression: "tolower(tostring(properties.environmentId))" },
+    notEmpty("environmentId"), countBy("environmentId"),
+    {
+      $type: "join", JoinKind: "leftouter",
+      RightTable: {
+        TableName: "PowerPlatformResources",
+        Clauses: [
+          { $type: "where", FieldName: "type", Operator: "==", Values: ["'microsoft.powerplatform/environments'"] },
+          { $type: "project", FieldList: ["environmentId = tolower(name)", "environmentName = properties.displayName"] }
+        ]
+      },
+      LeftColumnName: "environmentId", RightColumnName: "environmentId"
+    },
+    byCountDesc, { $type: "take", TakeCount: 10 }
+  ],
   regions: [notEmpty("location"), countBy("location"), byCountDesc],
   owners: [extendProperty("ownerId"), notEmpty("ownerId"), countBy("ownerId"), byCountDesc, { $type: "take", TakeCount: 10 }]
 };
@@ -117,8 +133,9 @@ export function environmentNames(environments) {
   const names = new Map();
   for (const environment of environments) {
     const name = environment?.displayName ?? environment?.properties?.displayName;
+    if (typeof name !== "string" || !name.trim()) continue;
     for (const id of [environment?.id, environment?.name]) {
-      if (typeof id === "string" && id && typeof name === "string" && name) names.set(id.toLowerCase(), name);
+      if (typeof id === "string" && id.trim()) names.set(id.trim().toLowerCase(), name.trim());
     }
   }
   return names;
@@ -126,7 +143,7 @@ export function environmentNames(environments) {
 
 export const OVERVIEW_CHARTS = ["environmentList", "types", "environments", "regions", "harness", "owners"];
 
-export async function loadTenantOverview(options, onProgress = () => {}, { copilotSummary } = {}) {
+export async function loadTenantOverview(options, onProgress = () => {}, { copilotSummary, ownerSession = {} } = {}) {
   const result = Object.fromEntries(OVERVIEW_CHARTS.map((id) => [id, { status: "pending" }]));
   const publish = () => onProgress(structuredClone(result));
   const step = async (id, work) => {
@@ -152,12 +169,35 @@ export async function loadTenantOverview(options, onProgress = () => {}, { copil
     const counts = countRows(await runResourceQuery(OVERVIEW_QUERIES.types, options), "type");
     return { counts, kpis: kpiTotals(counts) };
   });
-  await step("environments", async () => countRows(await runResourceQuery(OVERVIEW_QUERIES.environments, options), "environmentId").slice(0, 10));
+  await step("environments", async () => {
+    const rows = await runResourceQuery(OVERVIEW_QUERIES.environments, options);
+    const counts = countRows(rows, "environmentId").slice(0, 10);
+    const names = environmentNames(rows.map((row) => ({ id: row.environmentId, displayName: row.environmentName })));
+    return counts.map((row) => ({ ...row, name: names.get(row.key.toLowerCase()) }));
+  });
   await step("regions", async () => countRows(await runResourceQuery(OVERVIEW_QUERIES.regions, options), "location"));
   await step("harness", async () => {
     const summary = copilotSummary || await loadCopilotSummary(options);
     return { github: summary.github, standard: summary.standard, chat: summary.chat, unknown: summary.unknown, total: summary.rows.length };
   });
-  await step("owners", async () => countRows(await runResourceQuery(OVERVIEW_QUERIES.owners, options), "ownerId").slice(0, 10));
+  await step("owners", async () => {
+    const counts = countRows(await runResourceQuery(OVERVIEW_QUERIES.owners, options), "ownerId").slice(0, 10);
+    let names = new Map();
+    let nameError;
+    try {
+      if (counts.length && ownerSession.error) throw new Error(ownerSession.error);
+      names = await resolveOwnerNames(counts.map((row) => row.key), {
+        accessToken: ownerSession.accessToken, expiresAt: ownerSession.expiresAt,
+        fetchImpl: options.fetchImpl, signal: options.signal
+      });
+      if (counts.some((row) => !names.has(row.key.toLowerCase()))) {
+        nameError = "Microsoft Graph did not return names for some owners. Their directory objects may be deleted or inaccessible; IDs remain available in tooltips and Copy ID.";
+      }
+    } catch (error) {
+      if (error.name === "AbortError") throw error;
+      nameError = ownerSession.error || `${getApiErrorDescription(error)} Owner names require Microsoft Graph Directory.Read.All delegated permission and admin consent.`;
+    }
+    return { rows: counts.map((row) => ({ ...row, name: names.get(row.key.toLowerCase()) })), nameError };
+  });
   return result;
 }

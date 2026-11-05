@@ -1,5 +1,28 @@
 const AUTH_FLOW_KEY = "pp-admin-auth-flow";
 
+async function requestToken(tokenUrl, body, fetchImpl) {
+  const response = await fetchImpl(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body
+  });
+  const data = await response.json();
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("Microsoft Entra returned an invalid token response.");
+  }
+  if (!response.ok) {
+    throw new Error(data.error_description || data.error || `Token request failed (HTTP ${response.status}).`);
+  }
+  if (typeof data.access_token !== "string" || !data.access_token) {
+    throw new Error("Microsoft Entra returned no access token.");
+  }
+  const lifetime = Number(data.expires_in ?? 3600);
+  if (!Number.isFinite(lifetime) || lifetime <= 0) {
+    throw new Error("Microsoft Entra returned an invalid token lifetime.");
+  }
+  return { accessToken: data.access_token, expiresAt: Date.now() + lifetime * 1000, refreshToken: data.refresh_token };
+}
+
 function base64Url(bytes) {
   let binary = "";
   for (const byte of bytes) {
@@ -19,6 +42,7 @@ export async function beginAuthorization({
   clientId,
   redirectUri,
   scope = "https://api.powerplatform.com/.default",
+  resolveOwnerNames = false,
   storage = sessionStorage,
   cryptoApi = crypto,
   location = window.location
@@ -35,6 +59,7 @@ export async function beginAuthorization({
   );
   const challenge = base64Url(new Uint8Array(digest));
   const redirect = new URL(redirectUri);
+  const requestedScope = resolveOwnerNames ? [...new Set([...scope.split(/\s+/), "offline_access"])].join(" ") : scope;
 
   storage.setItem(AUTH_FLOW_KEY, JSON.stringify({
     state,
@@ -42,7 +67,8 @@ export async function beginAuthorization({
     tenantId,
     clientId,
     redirectUri: redirect.href,
-    scope
+    scope: requestedScope,
+    resolveOwnerNames
   }));
 
   const authorizeUrl = new URL(
@@ -53,7 +79,7 @@ export async function beginAuthorization({
     response_type: "code",
     redirect_uri: redirect.href,
     response_mode: "query",
-    scope,
+    scope: requestedScope,
     state,
     code_challenge: challenge,
     code_challenge_method: "S256"
@@ -105,22 +131,25 @@ export async function completeAuthorization({
     code_verifier: flow.verifier,
     scope: flow.scope
   });
-  const response = await fetchImpl(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error_description || data.error || `Token request failed (HTTP ${response.status}).`);
+  const token = await requestToken(tokenUrl, body, fetchImpl);
+  const auth = { accessToken: token.accessToken, expiresAt: token.expiresAt };
+  if (!flow.resolveOwnerNames) {
+    return { ...auth, ownerNameError: "Owner-name resolution is disabled. Reconnect with Resolve owner display names enabled." };
   }
-  if (typeof data.access_token !== "string" || !data.access_token) {
-    throw new Error("Microsoft Entra returned no access token.");
+  if (typeof token.refreshToken !== "string" || !token.refreshToken) {
+    return { ...auth, ownerNameError: "Microsoft Entra did not issue a refresh token for owner-name resolution. Reconnect to retry." };
   }
-  return {
-    accessToken: data.access_token,
-    expiresAt: Date.now() + Number(data.expires_in || 3600) * 1000
-  };
+  try {
+    const ownerToken = await requestToken(tokenUrl, new URLSearchParams({
+      client_id: flow.clientId,
+      grant_type: "refresh_token",
+      refresh_token: token.refreshToken,
+      scope: "https://graph.microsoft.com/.default"
+    }), fetchImpl);
+    return { ...auth, ownerAccessToken: ownerToken.accessToken, ownerExpiresAt: ownerToken.expiresAt };
+  } catch (error) {
+    return { ...auth, ownerNameError: `Owner-name authorization failed: ${error.message}. Grant Microsoft Graph Directory.Read.All delegated permission and admin consent, then reconnect.` };
+  }
 }
 
 export function clearAuthorizationFlow(storage = sessionStorage) {

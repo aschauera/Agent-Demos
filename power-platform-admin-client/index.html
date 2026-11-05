@@ -58,7 +58,7 @@
 
     <dialog id="connect-dialog" class="dialog">
       <form method="dialog" id="connect-form">
-        <button class="dialog-close" value="cancel" aria-label="Close dialog">×</button>
+        <button class="dialog-close" type="submit" value="cancel" formnovalidate aria-label="Close dialog">×</button>
         <div class="eyebrow">DELEGATED SIGN-IN</div>
         <h2>Connect to your tenant</h2>
         <p class="muted">Sign in with Microsoft Entra. The client uses authorization code with PKCE and keeps the access token in memory only.</p>
@@ -66,6 +66,8 @@
         <input id="tenant-id" name="tenantId" autocomplete="off" spellcheck="false" required>
         <label for="client-id">Public client application ID</label>
         <input id="client-id" name="clientId" autocomplete="off" spellcheck="false" required>
+        <label class="remember-connection"><input id="resolve-owner-names" type="checkbox" checked> Resolve owner display names with Microsoft Graph</label>
+        <p class="form-hint">Requires the app registration's Microsoft Graph Directory.Read.All delegated permission and admin consent. Disable to skip directory access. Owner-name lookup failures do not prevent Power Platform sign-in.</p>
         <label class="remember-connection"><input id="remember-connection" type="checkbox"> Save tenant and app IDs in this browser</label>
         <p class="form-hint">Local development only. IDs stay in browser storage, outside the repository. Tokens are never saved. Uncheck before signing in to remove saved browser IDs.</p>
         <div class="request-actions">
@@ -75,7 +77,7 @@
         <p class="form-hint">Configure this app registration as a single-page application with this local URL as its redirect URI. Grant only the delegated Power Platform API permissions you need.</p>
         <div id="connect-error" class="inline-error hidden" role="alert"></div>
         <div class="dialog-actions">
-          <button class="button button-quiet" value="cancel">Cancel</button>
+          <button class="button button-quiet" type="submit" value="cancel" formnovalidate>Cancel</button>
           <button id="sign-in-button" class="button button-primary" type="button">Continue to sign in</button>
         </div>
       </form>

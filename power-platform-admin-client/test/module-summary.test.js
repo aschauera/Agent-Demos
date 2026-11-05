@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { appKind, loadApplicationSummary, loadModuleSummary } from "../module-summary.js";
-import { NAVIGATION_MODULES } from "../api-catalog.js";
+import { NAVIGATION_MODULES, START_PAGE_MODULES, getSectionById } from "../api-catalog.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "content-type": "application/json" }
@@ -10,6 +10,19 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 test("App Management occupies numbered position 02, with Dynamics solutions separate", () => {
   assert.equal(NAVIGATION_MODULES[1].title, "App Management");
   assert.ok(NAVIGATION_MODULES.some((module) => module.title === "Dynamics solutions"));
+});
+
+test("the start page exposes My Queries and Licensing without removing management modules", () => {
+  assert.deepEqual(START_PAGE_MODULES.map((section) => [section.id, section.title]), [
+    ["resource-query", "My Queries"], ["licensing", "Licensing"]
+  ]);
+  for (const section of START_PAGE_MODULES) {
+    assert.equal(section, getSectionById(section.id));
+    assert.ok(NAVIGATION_MODULES.includes(section));
+  }
+  const queries = getSectionById("resource-query");
+  assert.equal(queries.namespace, "resourcequery");
+  assert.ok(queries.resourceGroups.some((group) => group.operations.some((operation) => operation.id === "query-resources")));
 });
 
 test("classifies only explicit type metadata, never names or generic provider type", () => {

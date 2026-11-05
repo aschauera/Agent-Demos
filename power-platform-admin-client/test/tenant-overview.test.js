@@ -10,6 +10,7 @@ import { createMockFetch } from "../session-mode.js";
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "content-type": "application/json" }
 });
+const ownerSession = { accessToken: "mock-directory", expiresAt: Number.MAX_SAFE_INTEGER };
 
 test("overview queries use documented server-side summarize clauses", () => {
   for (const clauses of Object.values(OVERVIEW_QUERIES)) {
@@ -19,6 +20,15 @@ test("overview queries use documented server-side summarize clauses", () => {
     assert.equal(summarize.SummarizeClauseExpression.FieldList.length, 1);
   }
   assert.deepEqual(OVERVIEW_QUERIES.environments.at(-1), { $type: "take", TakeCount: 10 });
+  assert.equal(OVERVIEW_QUERIES.environments[0].Expression, "tolower(tostring(properties.environmentId))");
+  const join = OVERVIEW_QUERIES.environments.find((clause) => clause.$type === "join");
+  assert.equal(join.JoinKind, "leftouter");
+  assert.equal(join.LeftColumnName, "environmentId");
+  assert.equal(join.RightColumnName, "environmentId");
+  assert.deepEqual(join.RightTable.Clauses, [
+    { $type: "where", FieldName: "type", Operator: "==", Values: ["'microsoft.powerplatform/environments'"] },
+    { $type: "project", FieldList: ["environmentId = tolower(name)", "environmentName = properties.displayName"] }
+  ]);
   assert.deepEqual(OVERVIEW_QUERIES.owners[0], { $type: "extend", FieldName: "ownerId", Expression: "tostring(properties.ownerId)" });
 });
 
@@ -67,6 +77,15 @@ test("environment breakdown maps type and protection level and builds a name loo
   assert.equal(names.get("env-b"), "Dev");
 });
 
+test("environment name lookup trims metadata and ignores unavailable names", () => {
+  assert.deepEqual([...environmentNames([
+    { id: " ENV-A ", displayName: " Production " },
+    { name: "ENV-B", properties: { displayName: " Sandbox " } },
+    { id: "env-c", displayName: " " },
+    { id: "env-d" }
+  ])], [["env-a", "Production"], ["env-b", "Sandbox"]]);
+});
+
 test("runResourceQuery follows skip tokens and rejects unsafe pagination", async () => {
   const requests = [];
   const rows = await runResourceQuery(OVERVIEW_QUERIES.types, {
@@ -94,7 +113,7 @@ test("runResourceQuery follows skip tokens and rejects unsafe pagination", async
 
 test("loads the tenant overview from sample data", async () => {
   const snapshots = [];
-  const result = await loadTenantOverview({ accessToken: "mock", fetchImpl: createMockFetch() }, (snapshot) => snapshots.push(snapshot));
+  const result = await loadTenantOverview({ accessToken: "mock", fetchImpl: createMockFetch() }, (snapshot) => snapshots.push(snapshot), { ownerSession });
   for (const [id, entry] of Object.entries(result)) assert.equal(entry.status, "done", `${id}: ${entry.error}`);
   const { kpis } = result.types.data;
   assert.deepEqual(
@@ -102,12 +121,59 @@ test("loads the tenant overview from sample data", async () => {
     [31, 2, 11, 11, 4, 3, 0]
   );
   assert.equal(result.environments.data[0].key, "mock-production");
+  assert.deepEqual(result.environments.data.map((row) => row.name), ["Sample Production", "Sample Sandbox"]);
   assert.ok(result.environments.data.every((item) => item.key));
   assert.equal(result.regions.data.reduce((sum, item) => sum + item.count, 0), 31);
-  assert.ok(result.owners.data.length <= 10 && result.owners.data.every((item) => item.key));
+  assert.ok(result.owners.data.rows.length <= 10 && result.owners.data.rows.every((item) => item.key));
+  assert.deepEqual(result.owners.data.rows.map((row) => row.name), ["Sample Flow Owner", "Sample App Maker", "Sample Developer"]);
+  assert.equal(result.owners.data.nameError, undefined);
   assert.equal(result.harness.data.total, 4);
   assert.ok(result.environmentList.data.total >= 1);
   assert.equal(snapshots[0].environmentList.status, "loading");
+});
+
+test("top environments use inventory names even when the Environments API is forbidden", async () => {
+  const mock = createMockFetch();
+  const result = await loadTenantOverview({
+    accessToken: "mock",
+    fetchImpl: async (url, init) => {
+      if (new URL(url).pathname === "/environmentmanagement/environments") {
+        return json({ error: { message: "The caller is not authorized." } }, 403);
+      }
+      return mock(url, init);
+    }
+  });
+  assert.equal(result.environmentList.status, "error");
+  assert.match(result.environmentList.error, /403/);
+  assert.equal(result.environments.status, "done");
+  assert.deepEqual(result.environments.data, [
+    { key: "mock-production", count: 20, name: "Sample Production" },
+    { key: "mock-sandbox", count: 9, name: "Sample Sandbox" }
+  ]);
+});
+
+test("missing inventory names preserve resource counts and IDs for tooltips", async () => {
+  const mock = createMockFetch();
+  const result = await loadTenantOverview({
+    accessToken: "mock",
+    fetchImpl: async (url, init) => {
+      const body = init?.body ? JSON.parse(init.body) : undefined;
+      if (body?.Clauses?.some((clause) => clause.$type === "join")) {
+        return json({ data: [
+          { environmentId: "ENV-A", environmentName: " Production ", resourceCount: 12 },
+          { environmentId: "env-b", environmentName: null, resourceCount: 7 },
+          { environmentId: "env-c", resourceCount: 3 }
+        ], resultTruncated: 1 });
+      }
+      return mock(url, init);
+    }
+  });
+  assert.equal(result.environments.status, "done");
+  assert.deepEqual(result.environments.data, [
+    { key: "ENV-A", count: 12, name: "Production" },
+    { key: "env-b", count: 7, name: undefined },
+    { key: "env-c", count: 3, name: undefined }
+  ]);
 });
 
 test("isolates individual chart failures and reuses a cached Copilot summary", async () => {
@@ -124,6 +190,50 @@ test("isolates individual chart failures and reuses a cached Copilot summary", a
   assert.match(result.owners.error, /Denied/);
   assert.equal(result.types.status, "done");
   assert.deepEqual(result.harness.data, { github: 2, standard: 1, chat: 0, unknown: 0, total: 3 });
+});
+
+test("directory permission failures preserve owner counts and report unavailable names", async () => {
+  const mock = createMockFetch();
+  const result = await loadTenantOverview({
+    accessToken: "mock",
+    fetchImpl: async (url, init) => new URL(url).origin === "https://graph.microsoft.com"
+      ? json({ error: { message: "Directory access denied." } }, 403) : mock(url, init)
+  }, undefined, { ownerSession });
+  assert.equal(result.owners.status, "done");
+  assert.deepEqual(result.owners.data.rows.map((row) => row.count), [15, 10, 4]);
+  assert.ok(result.owners.data.rows.every((row) => row.name === undefined && row.key));
+  assert.match(result.owners.data.nameError, /HTTP 403.*Directory.Read.All/);
+  assert.equal(result.types.status, "done");
+});
+
+test("missing directory objects and disabled owner sessions are explained without hiding counts", async () => {
+  const mock = createMockFetch();
+  const result = await loadTenantOverview({
+    accessToken: "mock",
+    fetchImpl: async (url, init) => new URL(url).origin === "https://graph.microsoft.com"
+      ? json({ value: [{ id: JSON.parse(init.body).ids[0], displayName: " Known Owner " }] }) : mock(url, init)
+  }, undefined, { ownerSession });
+  assert.equal(result.owners.data.rows[0].name, "Known Owner");
+  assert.equal(result.owners.data.rows[1].name, undefined);
+  assert.match(result.owners.data.nameError, /deleted or inaccessible/);
+
+  const disabled = await loadTenantOverview({ accessToken: "mock", fetchImpl: mock }, undefined, {
+    ownerSession: { error: "Owner-name resolution is disabled." }
+  });
+  assert.equal(disabled.owners.data.rows.length, 3);
+  assert.match(disabled.owners.data.nameError, /disabled/);
+});
+
+test("cancellation during owner lookup aborts the overview rather than reporting a directory warning", async () => {
+  const controller = new AbortController();
+  const mock = createMockFetch();
+  await assert.rejects(loadTenantOverview({
+    accessToken: "mock", signal: controller.signal,
+    fetchImpl: async (url, init) => {
+      if (new URL(url).origin === "https://graph.microsoft.com") controller.abort();
+      return mock(url, init);
+    }
+  }, undefined, { ownerSession }), { name: "AbortError" });
 });
 
 test("cancelling the overview aborts instead of reporting chart errors", async () => {

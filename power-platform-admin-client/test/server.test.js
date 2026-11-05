@@ -3,6 +3,23 @@ import assert from "node:assert/strict";
 import { createServer } from "../server.mjs";
 import { readFile } from "node:fs/promises";
 
+test("tenant connection dismiss buttons bypass required-field validation", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const form = html.match(/<form\b[^>]*\bid="connect-form"[^>]*>[\s\S]*?<\/form>/)?.[0];
+  assert.ok(form, "Connection form must exist.");
+  assert.match(form, /\bmethod="dialog"/);
+  assert.doesNotMatch(form.match(/^<form\b[^>]*>/)[0], /\bnovalidate\b/);
+  for (const id of ["tenant-id", "client-id"]) {
+    assert.match(form, new RegExp(`<input\\b[^>]*\\bid="${id}"[^>]*\\brequired\\b`));
+  }
+  const dismissButtons = [...form.matchAll(/<button\b[^>]*\bvalue="cancel"[^>]*>/g)];
+  assert.equal(dismissButtons.length, 2, "Both Cancel and X must dismiss the dialog.");
+  for (const [button] of dismissButtons) {
+    assert.match(button, /\btype="submit"/);
+    assert.match(button, /\bformnovalidate\b/);
+  }
+});
+
 test("serves the local console with restrictive security headers", async (t) => {
   const server = createServer();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -13,6 +30,7 @@ test("serves the local console with restrictive security headers", async (t) => 
   const response = await fetch(baseUrl);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-security-policy"), /connect-src 'self' https:\/\/api\.powerplatform\.com/);
+  assert.match(response.headers.get("content-security-policy"), /connect-src[^;]*https:\/\/graph\.microsoft\.com/);
   assert.equal(response.headers.get("cache-control"), "no-store");
   const html = await response.text();
   assert.match(html, /<title>The Bridge<\/title>/);
@@ -53,7 +71,7 @@ test("serves the shared reporting module without exposing reporting configuratio
   assert.equal((await fetch(`${baseUrl}/pp-reporting-api-demo/config.local.js`)).status, 404);
   assert.equal((await fetch(`${baseUrl}/session-token`, { method: "POST" })).status, 405);
   assert.equal((await fetch(`${baseUrl}/consumption.js`)).status, 200);
-  for (const module of ["app-management.js", "app-management-api.js", "application-inventory.js", "session-mode.js", "module-summary.js", "local-settings.js", "agent-details.js", "tenant-overview.js", "charts.js"]) {
+  for (const module of ["app-management.js", "app-management-api.js", "application-inventory.js", "session-mode.js", "module-summary.js", "local-settings.js", "agent-details.js", "tenant-overview.js", "owner-names.js", "query-workspace.js", "resource-query.js", "resource-query-samples.js", "charts.js"]) {
     const asset = await fetch(`${baseUrl}/${module}`);
     assert.equal(asset.status, 200);
     assert.match(asset.headers.get("content-type"), /javascript/);

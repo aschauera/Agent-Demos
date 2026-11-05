@@ -8,7 +8,12 @@ export function connectionPresentation(mode, token, expiresAt, now = Date.now())
   };
 }
 
+const MOCK_ENVIRONMENTS = [
+  { id: "mock-production", name: "mock-production", displayName: "Sample Production", geo: "unitedstates", state: "Ready", type: "Production", protectionLevel: "Standard" },
+  { id: "mock-sandbox", name: "mock-sandbox", displayName: "Sample Sandbox", geo: "europe", state: "Ready", type: "Sandbox", protectionLevel: "Basic" }
+];
 const MOCK_OWNERS = ["0f1e2d3c-1111-4aaa-8bbb-000000000001", "0f1e2d3c-2222-4aaa-8bbb-000000000002", "0f1e2d3c-3333-4aaa-8bbb-000000000003"];
+const MOCK_OWNER_NAMES = ["Sample App Maker", "Sample Flow Owner", "Sample Developer"];
 // [type, count, environmentId, location, owner index]
 const MOCK_INVENTORY = [
   ["microsoft.powerplatform/environments", 1, "", "unitedstates", -1],
@@ -21,33 +26,138 @@ const MOCK_INVENTORY = [
   ["microsoft.copilotstudio/agents", 2, "mock-production", "unitedstates", 0],
   ["microsoft.copilotstudio/agents", 2, "mock-sandbox", "europe", 2],
   ["microsoft.powerplatformconnector/connectors", 3, "mock-sandbox", "europe", 1]
-].flatMap(([type, count, environmentId, location, owner]) => Array.from({ length: count }, () => ({
-  type, location, properties: { environmentId, ownerId: MOCK_OWNERS[owner] ?? "" }
-})));
+].flatMap(([type, count, environmentId, location, owner]) => Array.from({ length: count }, (_, index) => {
+  const environment = type === "microsoft.powerplatform/environments" ? MOCK_ENVIRONMENTS.find((item) => item.geo === location) : undefined;
+  const name = environment?.name || `sample-${type.split("/").at(-1)}-${environmentId}-${index + 1}`;
+  return {
+    id: `${type}/${name}`, name, type, location,
+    properties: {
+      environmentId, ownerId: MOCK_OWNERS[owner] ?? "", createdBy: MOCK_OWNERS[owner] ?? "",
+      displayName: environment?.displayName || `Sample ${type.split("/").at(-1)} ${index + 1}`,
+      createdAt: "2026-01-15T10:30:00Z",
+      ...(environment ? { environmentType: environment.type, isManaged: environment.protectionLevel === "Standard" } : {})
+    }
+  };
+}));
 
-function mockAggregate(clauses) {
-  if (!Array.isArray(clauses) || !clauses.some((clause) => clause?.$type === "summarize")) {
-    throw new Error("No sample data is available for this Resource Query.");
+class MockQueryError extends Error {}
+
+function mockExpression(row, expression) {
+  if (typeof expression !== "string") throw new MockQueryError("No sample data is available for this query expression.");
+  const call = /^(tostring|tolower|todatetime)\((.*)\)$/.exec(expression);
+  if (call) {
+    const value = mockExpression(row, call[2]);
+    if (call[1] === "tostring") return String(value ?? "");
+    if (call[1] === "tolower") return String(value ?? "").toLowerCase();
+    const date = Date.parse(value);
+    if (!Number.isFinite(date)) throw new MockQueryError("Sample query contains an invalid date expression.");
+    return date;
   }
-  let rows = MOCK_INVENTORY.map((row) => ({ ...row }));
+  if (!/^[a-zA-Z_][\w.]*$/.test(expression)) throw new MockQueryError("No sample data is available for this query expression.");
+  if (Object.hasOwn(row, expression)) return row[expression];
+  return expression.split(".").reduce((value, key) => value?.[key], row);
+}
+
+function mockLiteral(value) {
+  if (typeof value !== "string") throw new MockQueryError("No sample data is available for this query value.");
+  const date = /^datetime\((.*)\)$/.exec(value);
+  if (date) {
+    const result = Date.parse(date[1]);
+    if (!Number.isFinite(result)) throw new MockQueryError("Sample query contains an invalid date value.");
+    return result;
+  }
+  if (value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1).replace(/''/g, "'");
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error;
+      throw new MockQueryError("Sample query contains an invalid quoted value.");
+    }
+  }
+  return value;
+}
+
+function mockQuery(clauses, input = MOCK_INVENTORY) {
+  if (!Array.isArray(clauses)) throw new MockQueryError("No sample data is available for this Resource Query.");
+  let rows = input.map((row) => ({ ...row }));
   for (const clause of clauses) {
-    const property = clause.$type === "extend" && /^tostring\(properties\.(\w+)\)$/.exec(clause.Expression);
+    if (!clause || typeof clause !== "object") throw new MockQueryError("No sample data is available for this query clause.");
     const summarize = clause.SummarizeClauseExpression;
-    if (property) {
-      rows = rows.map((row) => ({ ...row, [clause.FieldName]: String(row.properties[property[1]] ?? "") }));
-    } else if (clause.$type === "where" && clause.Operator === "!=" && clause.Values?.[0] === "''") {
-      rows = rows.filter((row) => row[clause.FieldName]);
-    } else if (clause.$type === "summarize" && summarize?.OperatorName === "count" && summarize.FieldList?.length === 1) {
+    if (clause.$type === "extend" && typeof clause.FieldName === "string" && clause.FieldName.trim()) {
+      rows = rows.map((row) => ({ ...row, [clause.FieldName]: mockExpression(row, clause.Expression) }));
+    } else if (clause.$type === "where" && ["==", "!=", "in~", ">="].includes(clause.Operator) && Array.isArray(clause.Values)) {
+      const values = clause.Values.map(mockLiteral);
+      rows = rows.filter((row) => {
+        const value = mockExpression(row, clause.FieldName);
+        if (clause.Operator === "in~") return values.some((item) => String(item).toLowerCase() === String(value ?? "").toLowerCase());
+        if (clause.Operator === ">=") return value >= values[0];
+        return clause.Operator === "==" ? value === values[0] : value !== values[0];
+      });
+    } else if (clause.$type === "project" && Array.isArray(clause.FieldList)) {
+      rows = rows.map((row) => Object.fromEntries(clause.FieldList.map((field) => {
+        const alias = /^(\w+)\s*=\s*(.+)$/.exec(field);
+        return [alias ? alias[1] : field, mockExpression(row, alias ? alias[2] : field)];
+      })));
+    } else if (clause.$type === "summarize" && summarize?.OperatorName === "count" && Array.isArray(summarize.FieldList) &&
+        typeof summarize.OperatorFieldName === "string" && summarize.OperatorFieldName.trim()) {
       const counts = new Map();
-      for (const row of rows) counts.set(row[summarize.FieldList[0]], (counts.get(row[summarize.FieldList[0]]) || 0) + 1);
-      rows = [...counts].map(([key, count]) => ({ [summarize.FieldList[0]]: key, [summarize.OperatorFieldName]: count }));
+      if (!summarize.FieldList.length && !rows.length) counts.set("[]", { values: [], count: 0 });
+      for (const row of rows) {
+        const values = summarize.FieldList.map((field) => mockExpression(row, field));
+        const key = JSON.stringify(values);
+        const entry = counts.get(key) || { values, count: 0 };
+        entry.count++;
+        counts.set(key, entry);
+      }
+      rows = [...counts.values()].map(({ values, count }) => ({
+        ...Object.fromEntries(summarize.FieldList.map((field, index) => [field, values[index]])),
+        [summarize.OperatorFieldName]: count
+      }));
+    } else if (clause.$type === "join" && ["leftouter", "inner"].includes(clause.JoinKind) &&
+        clause.RightTable?.TableName === "PowerPlatformResources") {
+      const right = mockQuery(clause.RightTable.Clauses);
+      if (rows.some((row) => !Object.hasOwn(row, clause.LeftColumnName)) || right.some((row) => !Object.hasOwn(row, clause.RightColumnName))) {
+        throw new MockQueryError("No sample data is available for an unknown join column.");
+      }
+      const columns = [...new Set(right.flatMap((row) => Object.keys(row)))];
+      rows = rows.flatMap((left) => {
+        const matches = right.filter((row) => row[clause.RightColumnName] === left[clause.LeftColumnName]);
+        if (!matches.length && clause.JoinKind === "inner") return [];
+        return (matches.length ? matches : [Object.fromEntries(columns.map((key) => [key, null]))]).map((row) => {
+          const merged = { ...left };
+          for (const [key, value] of Object.entries(row)) merged[Object.hasOwn(merged, key) ? `${key}1` : key] = value;
+          return merged;
+        });
+      });
     } else if (clause.$type === "orderby") {
-      const [[field, direction]] = Object.entries(clause.FieldNamesAscDesc);
-      rows.sort((a, b) => (direction === "desc" ? b[field] - a[field] : a[field] - b[field]));
-    } else if (clause.$type === "take") {
+      const fields = Object.entries(clause.FieldNamesAscDesc || {});
+      if (!fields.length || fields.some(([, direction]) => !["asc", "desc"].includes(direction))) {
+        throw new MockQueryError("No sample data is available for this sort clause.");
+      }
+      rows.sort((a, b) => {
+        for (const [field, direction] of fields) {
+          const left = mockExpression(a, field);
+          const right = mockExpression(b, field);
+          const difference = typeof left === "number" && typeof right === "number"
+            ? left - right : String(left ?? "").localeCompare(String(right ?? ""));
+          if (difference) return direction === "desc" ? -difference : difference;
+        }
+        return 0;
+      });
+    } else if (clause.$type === "take" && Number.isSafeInteger(clause.TakeCount) && clause.TakeCount >= 0) {
       rows = rows.slice(0, clause.TakeCount);
+    } else if (clause.$type === "count") {
+      rows = [{ Count: rows.length }];
+    } else if (clause.$type === "distinct" && Array.isArray(clause.FieldList)) {
+      const unique = new Map();
+      for (const row of rows) {
+        const values = clause.FieldList.map((field) => mockExpression(row, field));
+        unique.set(JSON.stringify(values), Object.fromEntries(clause.FieldList.map((field, index) => [field, values[index]])));
+      }
+      rows = [...unique.values()];
     } else {
-      throw new Error("No sample data is available for this Resource Query.");
+      throw new MockQueryError("No sample data is available for this Resource Query.");
     }
   }
   return rows;
@@ -57,9 +167,19 @@ export function createMockFetch() {
   return async (input, { method = "GET", signal, body } = {}) => {
     signal?.throwIfAborted();
     const url = new URL(input);
-    const json = (data) => new Response(JSON.stringify(data), {
-      status: 200, headers: { "content-type": "application/json" }
+    const json = (data, status = 200) => new Response(JSON.stringify(data), {
+      status, headers: { "content-type": "application/json" }
     });
+    if (url.origin === "https://graph.microsoft.com" && url.pathname === "/v1.0/directoryObjects/getByIds" && method === "POST") {
+      const query = JSON.parse(body);
+      if (!Array.isArray(query.ids) || query.ids.some((id) => typeof id !== "string")) {
+        throw new Error("No sample data is available for this directory lookup.");
+      }
+      return json({ value: query.ids.filter((id) => MOCK_OWNERS.includes(id.toLowerCase())).map((id) => ({
+        id, displayName: MOCK_OWNER_NAMES[MOCK_OWNERS.indexOf(id.toLowerCase())]
+      })) });
+    }
+    if (url.origin !== "https://api.powerplatform.com") throw new Error("No sample data is available for this service.");
     if (method === "POST" && url.pathname === "/resourcequery/resources/query") {
       const query = JSON.parse(body);
       if (query.TableName !== "PowerPlatformResources") throw new Error("No sample data is available for this Resource Query.");
@@ -67,8 +187,22 @@ export function createMockFetch() {
         { $type: "where", FieldName: "type", Operator: "in~", Values: ["'microsoft.copilotstudio/agents'"] },
         { $type: "orderby", FieldNamesAscDesc: { id: "asc" } }
       ])) {
-        const rows = mockAggregate(query.Clauses);
-        return json({ data: rows, count: rows.length, totalRecords: rows.length, resultTruncated: 1 });
+        try {
+          const rows = mockQuery(query.Clauses);
+          const token = query.Options?.SkipToken;
+          if (token && !/^mock-offset:\d+$/.test(token)) throw new MockQueryError("The sample continuation token is invalid.");
+          const offset = token ? Number(token.slice("mock-offset:".length)) : query.Options?.Skip ?? 0;
+          const top = query.Options?.Top ?? 1000;
+          if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(top) || top < 1 || top > 1000) {
+            throw new MockQueryError("The sample query pagination options are invalid.");
+          }
+          const data = rows.slice(offset, offset + top);
+          const next = offset + data.length < rows.length ? `mock-offset:${offset + data.length}` : undefined;
+          return json({ data, count: data.length, totalRecords: rows.length, resultTruncated: next ? 0 : 1, ...(next ? { skipToken: next } : {}) });
+        } catch (error) {
+          if (!(error instanceof MockQueryError)) throw error;
+          return json({ error: { code: "UnsupportedMockQuery", message: error.message } }, 400);
+        }
       }
       return json({ data: [
         { id: "mock-github", name: "sample-github-agent", type: "microsoft.copilotstudio/agents",
@@ -94,10 +228,7 @@ export function createMockFetch() {
       return json({ value: [{ id: "sample-test-set", name: "Sample evaluation set" }] });
     }
     if (url.pathname === "/environmentmanagement/environments") {
-      return json({ value: [
-        { id: "mock-production", displayName: "Sample Production", geo: "unitedstates", state: "Ready", type: "Production", protectionLevel: "Standard" },
-        { id: "mock-sandbox", displayName: "Sample Sandbox", geo: "europe", state: "Ready", type: "Sandbox", protectionLevel: "Basic" }
-      ] });
+      return json({ value: MOCK_ENVIRONMENTS });
     }
     if (/^\/powerapps\/environments\/[^/]+\/apps(?:\/[^/]+)?$/.test(url.pathname)) {
       const rows = [

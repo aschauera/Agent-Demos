@@ -1,6 +1,7 @@
 import {
   API_REFERENCE,
   NAVIGATION_MODULES,
+  START_PAGE_MODULES,
   APPLICATION_MODULE,
   ENVIRONMENTS_LIST,
   PERMISSIONS_REFERENCE,
@@ -24,9 +25,11 @@ import { connectionIds, readLocalConnection, saveLocalConnection, forgetLocalCon
 import { agentKey, agentDetailsMarkup, agentOperationFields, agentOperationRequest } from "./agent-details.js";
 import { KPI_BUCKETS, loadTenantOverview } from "./tenant-overview.js";
 import { barChart, donutChart } from "./charts.js";
+import { createQueryWorkspaceState, mountQueryWorkspace } from "./query-workspace.js";
 
 let disposeConsumption;
 let disposeAppManagement;
+let disposeQueryWorkspace;
 let agentDownloadUrl;
 
 const state = {
@@ -34,6 +37,9 @@ const state = {
   summaries: new Map(),
   token: undefined,
   tokenExpiresAt: undefined,
+  ownerToken: undefined,
+  ownerTokenExpiresAt: undefined,
+  ownerNameError: undefined,
   currentSectionId: undefined,
   lastResult: undefined,
   lastError: undefined,
@@ -43,6 +49,7 @@ const state = {
 };
 state.appManagement = createAppManagementState();
 state.inventory = createInventoryState();
+state.queryWorkspace = createQueryWorkspaceState();
 const mockFetch = createMockFetch();
 const sessionToken = () => state.mode === "mock" ? "local-mock-only" :
   connectionPresentation(state.mode, state.token, state.tokenExpiresAt).connected ? state.token : undefined;
@@ -196,8 +203,6 @@ function chartPanel(title, chart, body, { inventory = true, wide = false } = {})
   return `<section class="panel chart-panel${wide ? " chart-wide" : ""}"><div class="panel-title"><h3>${escapeHtml(title)}</h3></div>${markup}</section>`;
 }
 
-const shortId = (id) => (id.length > 18 ? `${id.slice(0, 8)}…${id.slice(-6)}` : id);
-
 function renderTenantOverview() {
   const container = content.querySelector("#tenant-overview");
   if (!container) return;
@@ -215,15 +220,18 @@ function renderTenantOverview() {
     return;
   }
   const names = new Map(charts.environmentList?.data?.names || []);
+  const environmentLabel = ({ key, name }) => name || names.get(key.toLowerCase());
   const environmentHref = "#section/environment-management";
   markup += `<div class="chart-grid">
-    ${chartPanel("Top environments by resources", charts.environments, (rows) => barChart({
-      label: "Top 10 environments by resource count",
-      items: rows.map(({ key, count }) => {
-        const name = names.get(key.toLowerCase());
-        return { label: name || shortId(key), value: count, href: environmentHref, tooltip: `${name ? `${name} · ` : ""}${key}: ${count}` };
-      })
-    }))}
+    ${chartPanel("Top environments by resources", charts.environments, (rows) => {
+      const items = rows.map((row) => {
+        const name = environmentLabel(row);
+        return { label: name || "Name unavailable", value: row.count, href: environmentHref,
+          tooltip: `${name ? `${name} · ` : ""}${row.key}: ${row.count}` };
+      });
+      return `${barChart({ label: "Top 10 environments by resource count", items })}${rows.some((row) => !environmentLabel(row))
+        ? '<p class="form-hint" role="status">Some environment names were not returned. Environment IDs remain available in the tooltips.</p>' : ""}`;
+    })}
     ${chartPanel("Resources by region", charts.regions, (rows) => donutChart({
       label: "Resources by region", centerLabel: "resources",
       items: rows.map(({ key, count }) => ({ label: key, value: count }))
@@ -241,13 +249,14 @@ function renderTenantOverview() {
       items: data.byProtection.map(({ key, count }) => ({ label: key, value: count, href: environmentHref,
         color: { Managed: 1, "Not managed": 3, Unknown: 5 }[key] }))
     })}</div>`, { inventory: false })}
-    ${chartPanel("Top owners by items", charts.owners, (rows) => barChart({
+    ${chartPanel("Top owners by items", charts.owners, ({ rows, nameError }) => `${barChart({
       label: "Top 10 owners by item count", emptyText: "No owner metadata returned.",
-      items: rows.map(({ key, count }) => ({ label: key, value: count, copy: key, tooltip: `Entra object ID ${key}: ${count}` }))
-    }), { wide: true })}
+      items: rows.map(({ key, count, name }) => ({ label: name || "Name unavailable", value: count, copy: key,
+        tooltip: `${name ? `${name} · ` : ""}Entra object ID ${key}: ${count}` }))
+    })}${nameError ? `<p class="request-error" role="alert">${escapeHtml(nameError)}</p>` : ""}`, { wide: true })}
   </div>`;
-  const failed = Object.values(charts).some((chart) => chart.status === "error");
-  markup += `<p class="form-hint">Inventory aggregates are computed server-side by the Resource Query API (summarize count). Inventory changes typically appear within 20 minutes; V1 agents are not tracked. Owners are Microsoft Entra object IDs.</p>`;
+  const failed = Object.values(charts).some((chart) => chart.status === "error" || chart.data?.nameError);
+  markup += `<p class="form-hint">Inventory aggregates are computed server-side by the Resource Query API (summarize count). Inventory changes typically appear within 20 minutes; V1 agents are not tracked. Owner display names come from Microsoft Graph; object IDs remain in tooltips and Copy ID.</p>`;
   if (entry.error) markup += `<div class="request-error" role="alert">${escapeHtml(entry.error)}</div>`;
   markup += `<p class="form-hint" role="status">${entry.status === "loading" ? "Loading tenant overview…" : entry.error || failed ? "Overview incomplete; unavailable charts are marked above. Refresh to retry." : "Tenant overview loaded. Refresh for current data."}</p>
     <div class="overview-actions">
@@ -278,9 +287,12 @@ function ensureTenantOverview() {
   const finishLoading = beginLoading("Loading tenant overview…", undefined);
   const copilot = entries.get("copilot-studio");
   const copilotSummary = copilot?.status === "done" && !copilot.error ? copilot.data : undefined;
+  const ownerSession = state.mode === "mock"
+    ? { accessToken: "local-mock-directory-only", expiresAt: Date.now() + 3600000 }
+    : { accessToken: state.ownerToken, expiresAt: state.ownerTokenExpiresAt, error: state.ownerNameError };
   const update = () => { if (state.summaries === entries && !state.currentSectionId) renderTenantOverview(); };
   renderTenantOverview();
-  void loadTenantOverview(sessionOptions({ signal: entry.controller.signal }), (data) => { entry.data = data; update(); }, { copilotSummary })
+  void loadTenantOverview(sessionOptions({ signal: entry.controller.signal }), (data) => { entry.data = data; update(); }, { copilotSummary, ownerSession })
     .then((data) => { entry.data = data; }, (error) => {
       entry.error = error.name === "AbortError" ? "Overview cancelled. Refresh to retry." : getApiErrorDescription(error);
     }).finally(() => { entry.status = "done"; finishLoading(); update(); });
@@ -293,14 +305,30 @@ function renderDashboard() {
       <h1>One workspace for your platform.</h1>
       <p>Tenant-wide totals and resource distribution from the Power Platform inventory, with drilldown into each management module.</p>
     </div>
-    <section id="tenant-overview" aria-label="Tenant overview"></section>
-    <div class="section-heading"><div><h2>Management modules</h2><p>Documented APIs grouped by management task.</p></div><a class="button button-quiet button-small" href="${API_REFERENCE}" target="_blank" rel="noreferrer">Microsoft Learn ↗</a></div>
-    <div class="section-grid">${NAVIGATION_MODULES.map((section, index) => sectionCard(section, index)).join("")}</div>`;
+    <div class="section-heading"><div><h2>Get started</h2><p>Explore your resources or review your tenant's licensing.</p></div></div>
+    <nav id="start-page-navigation" class="section-grid" aria-label="Tenant start page">
+      ${START_PAGE_MODULES.map((section) => sectionCard(section)).join("")}
+    </nav>
+    <div class="section-heading"><div><h2>Tenant overview</h2><p>Tenant-wide inventory and resource distribution.</p></div><a class="button button-quiet button-small" href="${API_REFERENCE}" target="_blank" rel="noreferrer">Microsoft Learn ↗</a></div>
+    <section id="tenant-overview" aria-label="Tenant overview"></section>`;
   ensureTenantOverview();
 }
 
-function sectionCard(section, index) {
-  return `<a class="section-card" href="#section/${escapeHtml(section.id)}"><div class="section-card-top"><span class="card-orbit">${String(index + 1).padStart(2, "0")}</span><span class="permission-count">${section.operationCount} operations</span></div><h3>${escapeHtml(section.title)}</h3><p>${escapeHtml(section.description)}</p></a>`;
+function sectionCard(section) {
+  const queries = section.id === "resource-query";
+  const description = queries
+    ? "Explore your tenant inventory with resource queries."
+    : "Review licensing, capacity, billing policies, and consumption.";
+  const icon = queries
+    ? '<path d="M4 4h12v4H4zM4 12h6M4 16h6"/><circle cx="16" cy="15" r="4"/><path d="m19 18 3 3"/>'
+    : '<path d="M6 3h9l4 4v14H6zM15 3v5h4M9 12h7M9 16h7"/>';
+  return `<a class="section-card" href="#section/${escapeHtml(section.id)}">
+    <div class="section-card-top">
+      <span class="card-orbit"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">${icon}</svg></span>
+      <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+    </div>
+    <h3>${escapeHtml(section.title)}</h3><p>${description}</p>
+  </a>`;
 }
 
 function renderPermissionList(section) {
@@ -399,6 +427,20 @@ function resultMarkup(result) {
 }
 
 function renderSection(section) {
+  if (section.id === "resource-query") {
+    disposeQueryWorkspace = mountQueryWorkspace(content, {
+      state: state.queryWorkspace, accessToken: sessionToken(),
+      fetchImpl: state.mode === "mock" ? mockFetch : fetch, beginLoading,
+      showDetail: (row) => showDetail("Query result", row),
+      recordRequest: (response, error) => recordRequest(section, response, error),
+      claimRequest: (controller) => {
+        if (state.activeController) throw new Error("Cancel the active API request before executing another query.");
+        state.activeController = controller;
+        return () => { if (state.activeController === controller) state.activeController = undefined; };
+      }
+    });
+    return;
+  }
   if (section.id === "app-management") {
     disposeAppManagement = mountAppManagement(content, {
       state: state.appManagement, accessToken: sessionToken(), showDetail, recordRequest,
@@ -874,6 +916,8 @@ function render() {
   disposeAppManagement = undefined;
   disposeConsumption?.();
   disposeConsumption = undefined;
+  disposeQueryWorkspace?.();
+  disposeQueryWorkspace = undefined;
   setConnectionStatus();
   if (["power-apps", "power-pages"].includes(state.currentSectionId)) {
     state.inventory.view = state.currentSectionId;
@@ -893,7 +937,7 @@ function render() {
   document.title = section
     ? `${section.title} · The Bridge`
     : "The Bridge";
-  if (section) ensureModuleSummary(section.id);
+  if (section && section.id !== "resource-query") ensureModuleSummary(section.id);
   if (state.mode === "mock") {
     const notice = document.createElement("p");
     notice.className = "notice warning";
@@ -1082,7 +1126,8 @@ async function connect() {
       tenantId,
       clientId,
       redirectUri: `${window.location.origin}/`,
-      scope: config.scope
+      scope: config.scope,
+      resolveOwnerNames: document.querySelector("#resolve-owner-names").checked
     });
   } catch (error) {
     connectDialog.showModal();
@@ -1096,6 +1141,9 @@ async function finishAuthentication() {
     if (auth) {
       state.token = auth.accessToken;
       state.tokenExpiresAt = auth.expiresAt;
+      state.ownerToken = auth.ownerAccessToken;
+      state.ownerTokenExpiresAt = auth.ownerExpiresAt;
+      state.ownerNameError = auth.ownerNameError;
       setConnectionStatus();
       showToast("Connected. The access token is held in memory for this page session.");
       render();
@@ -1117,8 +1165,14 @@ function disconnect() {
   disposeAppManagement?.();
   disposeAppManagement = undefined;
   state.appManagement = createAppManagementState();
+  disposeQueryWorkspace?.();
+  disposeQueryWorkspace = undefined;
+  state.queryWorkspace = createQueryWorkspaceState();
   state.token = undefined;
   state.tokenExpiresAt = undefined;
+  state.ownerToken = undefined;
+  state.ownerTokenExpiresAt = undefined;
+  state.ownerNameError = undefined;
   state.lastResult = undefined;
   state.lastError = undefined;
   state.requestLog = [];
@@ -1185,6 +1239,11 @@ setInterval(() => {
     disconnect();
     showToast("Your tenant session expired. Connect again.");
   }
+  if (state.ownerToken && state.ownerTokenExpiresAt <= Date.now()) {
+    state.ownerToken = undefined;
+    state.ownerTokenExpiresAt = undefined;
+    state.ownerNameError = "The owner-name session expired. Reconnect to resolve owner display names.";
+  }
 }, 1000);
 document.querySelector("#sign-in-button").addEventListener("click", connect);
 window.addEventListener("hashchange", () => {
@@ -1196,7 +1255,9 @@ window.addEventListener("hashchange", () => {
 window.addEventListener("beforeunload", () => {
   disposeAppManagement?.();
   disposeConsumption?.();
+  disposeQueryWorkspace?.();
   state.token = undefined;
+  state.ownerToken = undefined;
 });
 
 const initialRoute = window.location.hash.slice(1).split("/");

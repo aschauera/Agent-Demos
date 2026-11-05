@@ -19,6 +19,8 @@ You need Node.js 20 or later, Windows PowerShell for nonblocking startup, and ac
 7. Select **Delegated permissions** and add only those needed. For the initial environment overview, add `EnvironmentManagement.Environments.Read`. Consult the [permission reference](https://learn.microsoft.com/en-us/power-platform/admin/programmability-permission-reference) before enabling further operations.
 8. Grant admin consent where required, using an appropriately authorized administrator.
 
+To show **Top owners** display names, additionally add **Microsoft Graph > Delegated permissions > Directory.Read.All** and grant admin consent. This directory-wide read permission is needed by Graph's [directoryObjects/getByIds](https://learn.microsoft.com/en-us/graph/api/directoryobject-getbyids?view=graph-rest-1.0) endpoint to resolve users, groups, and service principals. The client looks up only the top ten owner IDs. Leave this permission unconfigured and disable **Resolve owner display names** in the connection dialog if directory access is not desired.
+
 Do **not** create a client secret or use application permissions for this client. It requests `https://api.powerplatform.com/.default`, which represents the delegated permissions configured on the registration; it does not grant every API permission. See Microsoft's [authentication guidance](https://learn.microsoft.com/en-us/power-platform/admin/programmability-authentication-v2).
 
 ## Installation and starting
@@ -64,11 +66,15 @@ Mock mode provides labeled sample environments, application packages/install sta
 5. Open an API section, expand a resource group, and select **Use** beside an operation to prefill its documented method, route, and API version. Open its Microsoft Learn reference to check permissions and body schema, replace any `{parameter}` placeholders, and enter a JSON body when required.
 6. Review the response table or JSON, select rows for details, and use **Load next page** where available. Counts describe loaded data, not necessarily tenant-wide totals.
 
+Select **Cancel** or the close (**X**) button to dismiss the connection dialog without completing the fields or starting sign-in.
+
+**Resolve owner display names with Microsoft Graph** is enabled by default. With it enabled, sign-in also requests `offline_access` and exchanges the returned refresh token once for a separate `https://graph.microsoft.com/.default` access token. The refresh token is never persisted or retained in the session; both access tokens stay in memory, have separate expiry checks, and are cleared on disconnect or mode changes. Missing Graph consent or directory access is shown in the owners chart without blocking Power Platform access. Disable the option to skip `offline_access` and Graph token acquisition entirely.
+
 For local development, use **Save locally** in the connection dialog, or check **Save tenant and app IDs in this browser** before signing in. Only those two public identifiers are saved to this localhost origin's browser storage, outside the filesystem and Git repository; tokens are never saved. Saved IDs prefill the dialog after reload. Use **Forget saved IDs** to remove them, or uncheck the option before signing in. Disconnecting retains opted-in IDs but clears the token and tenant data. Saving is opt-in; storage errors are displayed.
 
 For optional file-based defaults, copy [config.example.js](./config.example.js) to `config.local.js` and set `tenantId` and `clientId`. The local file is git-ignored; never force-add it. Browser-saved IDs take precedence over file defaults. Use browser storage to keep saved IDs entirely outside the repository.
 
-Select **Disconnect** to clear the local session. Tokens are held only in memory and disappear on reload; temporary PKCE state is removed after sign-in. API results and request bodies are not written to disk or browser storage. Test mutations in a non-production tenant first: confirmation does not replace service-side authorization or an assessment of an action's impact.
+Select **Disconnect** to clear the local session. Tokens are held only in memory and disappear on reload; temporary PKCE state is removed after sign-in. API results are never written to disk or browser storage. Request bodies remain in memory except for resource queries you explicitly choose to save in **My Queries**. Test mutations in a non-production tenant first: confirmation does not replace service-side authorization or an assessment of an action's impact.
 
 If sign-in fails, verify the SPA redirect URI and tenant/client IDs. For API access errors, check the operation's delegated permissions, admin consent, and your user's service-side role. The client surfaces HTTP status and API errors rather than substituting empty results.
 
@@ -76,16 +82,30 @@ All module pages show a sticky **Loading data** banner above the content while s
 
 ### Tenant overview
 
-When connected, the dashboard shows tenant-wide aggregate charts instead of loaded-row counts. Totals are computed server-side by the [Power Platform inventory Resource Query API](https://learn.microsoft.com/en-us/power-platform/admin/power-platform-inventory-api) (`POST /resourcequery/resources/query`) using `summarize count()` queries, so the browser never pages through every resource:
+The tenant start page presents two navigation tiles above the overview: **My Queries** opens the Resource Query workspace, and **Licensing** opens licensing, capacity, billing policies, and consumption reports. **My Queries** is also the query workspace's sidebar, page, and breadcrumb label; its existing `#section/resource-query` route and documented API operations are unchanged. All other management modules remain available in the sidebar. Tiles support keyboard navigation and stack on narrow screens.
+
+When connected, the dashboard shows tenant-wide aggregate charts instead of loaded-row counts. Totals are computed server-side by the [Power Platform inventory Resource Query API](https://learn.microsoft.com/en-us/power-platform/admin/inventory-api) (`POST /resourcequery/resources/query`) using `summarize count()` queries, so the browser never pages through every resource:
 
 - **KPI tiles**: total resources, environments, apps (canvas, model-driven, code, other), flows (cloud and agent flows), agents and connectors, from one count-by-`type` query. Each tile links to its module.
-- **Top 10 environments by resources**: count by `properties.environmentId`, labeled with environment display names (the ID is in the tooltip).
+- **Top 10 environments by resources**: count by `properties.environmentId`, joined to environment inventory records for display names. Names do not depend on access to the Environments API. IDs appear only in tooltips; missing names are explicitly marked **Name unavailable**.
 - **Resources by region**: count by `location`.
 - **Agents by harness**: reuses the Copilot Studio inventory summary (GitHub Copilot, Standard, Copilot Chat, Unknown).
 - **Environments by type and managed state**: from the Environments API (`type` and `protectionLevel`). `Standard` protection is shown as **Managed** and `Basic` as **Not managed**; this mapping follows the Managed Environments convention.
-- **Top 10 owners**: count by `properties.ownerId` (Entra object IDs, copyable).
+- **Top 10 owners**: count by `properties.ownerId`, labeled with Microsoft Entra display names from a batched Microsoft Graph lookup. IDs remain in tooltips and **Copy ID**. Missing or inaccessible names are marked **Name unavailable**, with an explicit explanation; resource counts are preserved if directory lookup fails.
 
-Chart rows link to the related module. Each chart loads and fails independently; **Refresh overview** reloads everything and **Cancel** aborts. Add the delegated `ResourceQuery.Resources.Read` permission (plus `EnvironmentManagement.Environments.Read`). The inventory is eventually consistent (it can lag by up to about 20 minutes) and excludes classic V1 agents. Mock mode computes the same aggregates from a small sample inventory.
+Chart rows link to the related module. Each chart loads and fails independently; **Refresh overview** reloads everything and **Cancel** aborts. Add the delegated `ResourceQuery.Resources.Read` permission for inventory charts, including environment names; `EnvironmentManagement.Environments.Read` is additionally needed for the type and managed-state chart. The inventory is eventually consistent (it can lag by up to about 20 minutes) and excludes classic V1 agents. Mock mode computes the same aggregates and environment-name join from a small sample inventory.
+
+### My Queries workspace
+
+**My Queries** replaces the generic Resource Query operation page with an Explorer-style workspace: a large JSON editor, **Execute query** and **Cancel** beneath it, a query tree on the right, and results below both panels. It retains the global navigation, tenant connection, and loading indicator. The Power Platform endpoint accepts structured JSON clauses, not raw KQL; it always calls the documented read-only `POST /resourcequery/resources/query` operation with the catalog's API version and delegated `ResourceQuery.Resources.Read` access.
+
+The **Microsoft Learn** tree contains the [published inventory query examples](https://learn.microsoft.com/en-us/power-platform/admin/inventory-api#complete-query-examples), filters built from the [documented resource types](https://learn.microsoft.com/en-us/power-platform/admin/inventory-schema#resource-types), and inventory summaries. Select a leaf to load its JSON and source link. Replace placeholder environment IDs and dates before executing. **New query** creates a starter request; **Format JSON** validates and indents it. Ctrl+Enter (Command+Enter on macOS) executes from the editor.
+
+Use the tree's **Query name** and **Saved folder path** fields to organize queries, for example `Tenant/Apps`. **Save query** explicitly saves or updates the selected user query; **Save as new** creates a separate copy. Samples are not modified. Saved queries persist in this localhost origin's browser storage, not the repository or cloud, and contain only the query name, folder, JSON text, ID, and update time. Tokens and results are never saved. **Delete saved query** requires confirmation and retains the editor text. Unsaved changes require confirmation before loading another query. Tree navigation supports arrow keys, Home/End, and Enter/Space.
+
+The result table shows every returned column with row details and 100-row display pages; **JSON** exposes the unmodified response, or all responses after server pagination. **Load next server page** uses the executed query's continuation token, not subsequently edited text. Counts describe loaded results, and truncated responses are explicitly marked. Cancelling or leaving the workspace aborts its request and ignores late responses. Unsaved editor text survives navigation within the session; disconnecting or changing data source clears the draft and results but retains explicitly saved queries. Mock mode executes built-in queries against labeled local inventory and supports pagination; unsupported mock expressions fail explicitly.
+
+Storage, quota, malformed-library, query-validation, and API errors are displayed. A damaged saved library does not stop editing samples or querying; **Reload library** retries reading it, and **Reset saved library** requires explicit confirmation before removing only the saved-query library.
 
 ### App Management workspace
 

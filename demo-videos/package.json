@@ -1,0 +1,29 @@
+{
+  "name": "demo-videos",
+  "version": "1.0.0",
+  "description": "Screenshot-based demo clips (zoom + highlight) and a branded slide deck for the Architecture Expert agent demo",
+  "scripts": {
+    "browser": "tsx --env-file=.env scripts/launch-browser.ts",
+    "login": "tsx --env-file=.env scripts/login.ts",
+    "capture:context": "tsx --env-file=.env scenarios/01-context.ts",
+    "capture:package": "tsx --env-file=.env scenarios/02-copilot-package.ts",
+    "capture:drawio": "tsx --env-file=.env scenarios/03-drawio.ts",
+    "capture:followup": "tsx --env-file=.env scenarios/04-followup.ts",
+    "manifest": "python lib/build_manifest.py",
+    "render": "python lib/render_clips.py artifacts/manifest.json videos",
+    "deck": "python lib/build_deck.py artifacts/template/template.pptx artifacts/manifest.json videos deck/copilot-architecture-demo.pptx",
+    "build": "npm run manifest && npm run render && npm run deck",
+    "typecheck": "tsc",
+    "video": "pwsh -NoProfile -File scripts/export-video.ps1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.5",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}

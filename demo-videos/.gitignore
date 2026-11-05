@@ -1,0 +1,9 @@
+node_modules/
+.env
+artifacts/
+videos/
+deck/
+playwright/.auth/
+test-results/
+*.capture.mkv
+*.render.mkv
